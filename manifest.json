@@ -1,0 +1,69 @@
+{
+  "manifest_version": 3,
+  "name": "ADS for Overleaf",
+  "version": "1.0.0",
+  "description": "Connect NASA ADS libraries to Overleaf. Search, cite, and export BibTeX directly in the Overleaf editor.",
+  "author": "ADS for Overleaf Contributors",
+  "homepage_url": "https://github.com/yipihey/ads-for-overleaf",
+  
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  
+  "host_permissions": [
+    "https://api.adsabs.harvard.edu/*",
+    "https://*.overleaf.com/*"
+  ],
+  
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": ["https://www.overleaf.com/project/*"],
+      "js": ["content/overleaf-injector.js"],
+      "css": ["styles/overleaf-panel.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    },
+    "default_title": "ADS for Overleaf"
+  },
+  
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  
+  "commands": {
+    "open-citation-picker": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+C",
+        "mac": "Command+Shift+C"
+      },
+      "description": "Open citation picker"
+    }
+  },
+  
+  "default_locale": "en",
+  
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

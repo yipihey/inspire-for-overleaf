@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "ADS for Overleaf",
+    "description": "The name of the extension"
+  },
+  "extensionDescription": {
+    "message": "Connect NASA ADS libraries to Overleaf. Search, cite, and export BibTeX directly in the Overleaf editor.",
+    "description": "The description of the extension"
+  }
+}

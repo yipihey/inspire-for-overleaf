@@ -1,0 +1,33 @@
+{
+  "name": "ads-for-overleaf",
+  "version": "1.0.0",
+  "description": "Browser extension connecting NASA ADS to Overleaf for academic paper writing",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/run-tests.js",
+    "test:bibtex": "node tests/bibtex-utils.test.js",
+    "test:api": "node tests/ads-api.test.js",
+    "test:storage": "node tests/storage.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yipihey/ads-for-overleaf"
+  },
+  "keywords": [
+    "browser-extension",
+    "nasa-ads",
+    "overleaf",
+    "latex",
+    "bibtex",
+    "citations",
+    "astronomy"
+  ],
+  "author": "ADS for Overleaf Contributors",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yipihey/ads-for-overleaf/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

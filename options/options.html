@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADS for Overleaf - Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="options-container">
+    <header class="options-header">
+      <h1>ADS for Overleaf</h1>
+      <p>Settings</p>
+    </header>
+
+    <main class="options-content">
+      <!-- API Token Section -->
+      <section class="section">
+        <h2>ADS API Token</h2>
+        <p class="description">
+          Your personal API token from NASA ADS. Get yours at 
+          <a href="https://ui.adsabs.harvard.edu/user/settings/token" target="_blank">ui.adsabs.harvard.edu/user/settings/token</a>
+        </p>
+        
+        <div class="form-group">
+          <label for="api-token">API Token</label>
+          <div class="input-group">
+            <input type="password" id="api-token" placeholder="Paste your ADS API token here">
+            <button type="button" id="toggle-token" class="btn-icon" title="Show/Hide">👁</button>
+          </div>
+          <div id="token-status" class="status"></div>
+        </div>
+        
+        <div class="form-actions">
+          <button id="save-token" class="btn primary">Save Token</button>
+          <button id="test-token" class="btn secondary">Test Connection</button>
+        </div>
+      </section>
+
+      <!-- BibTeX Preferences -->
+      <section class="section">
+        <h2>BibTeX Preferences</h2>
+        
+        <div class="form-group">
+          <label for="key-format">Citation Key Format</label>
+          <select id="key-format">
+            <option value="">Bibcode (default)</option>
+            <option value="%1H%Y">Author2024</option>
+            <option value="%1H:%Y">Author:2024</option>
+            <option value="%1H%Y%q">Author2024ApJ</option>
+            <option value="%2H%Y">AuthorCoauthor2024</option>
+          </select>
+          <p class="hint">How citation keys are formatted in exported BibTeX</p>
+        </div>
+
+        <div class="form-group">
+          <label for="journal-format">Journal Format</label>
+          <select id="journal-format">
+            <option value="1">AASTeX macros (\apj, \mnras)</option>
+            <option value="2">Full journal names</option>
+            <option value="3">Abbreviated names</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="max-authors">Maximum Authors</label>
+          <input type="number" id="max-authors" min="1" max="100" value="10">
+          <p class="hint">Authors beyond this number will show as "et al."</p>
+        </div>
+      </section>
+
+      <!-- Citation Preferences -->
+      <section class="section">
+        <h2>Citation Preferences</h2>
+        
+        <div class="form-group">
+          <label for="cite-command">Citation Command</label>
+          <select id="cite-command">
+            <option value="\\cite">\\cite{}</option>
+            <option value="\\citep">\\citep{} (natbib parenthetical)</option>
+            <option value="\\citet">\\citet{} (natbib textual)</option>
+            <option value="\\citealt">\\citealt{} (natbib no parens)</option>
+            <option value="\\citealp">\\citealp{} (natbib alt parens)</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Cache Management -->
+      <section class="section">
+        <h2>Cache</h2>
+        <p class="description">
+          Library data is cached locally to improve performance.
+        </p>
+        <button id="clear-cache" class="btn secondary">Clear Cache</button>
+      </section>
+
+      <!-- About -->
+      <section class="section">
+        <h2>About</h2>
+        <p class="description">
+          ADS for Overleaf connects your NASA ADS libraries directly to Overleaf, 
+          making it easy to cite papers while writing.
+        </p>
+        <p class="description">
+          <strong>Version:</strong> 1.0.0<br>
+          <strong>Source:</strong> <a href="https://github.com/yipihey/ads-for-overleaf" target="_blank">GitHub</a><br>
+          <strong>License:</strong> MIT
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

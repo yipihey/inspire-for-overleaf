@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADS for Overleaf</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header class="popup-header">
+      <h1>ADS for Overleaf</h1>
+    </header>
+
+    <div id="not-configured" class="section hidden">
+      <div class="message warning">
+        <p>API token not configured.</p>
+        <button id="open-options" class="btn primary">Set up now</button>
+      </div>
+    </div>
+
+    <div id="configured" class="section hidden">
+      <div class="libraries-section">
+        <div class="section-header">
+          <h2>Your Libraries</h2>
+          <button id="refresh-btn" class="btn-icon" title="Refresh">↻</button>
+        </div>
+        <div id="libraries-list" class="libraries-list">
+          <div class="loading">Loading...</div>
+        </div>
+      </div>
+
+      <div class="actions-section">
+        <button id="open-overleaf" class="btn secondary" disabled>
+          Open in Overleaf Panel
+        </button>
+      </div>
+    </div>
+
+    <footer class="popup-footer">
+      <a href="#" id="settings-link">Settings</a>
+      <span class="separator">•</span>
+      <a href="https://github.com/yipihey/ads-for-overleaf" target="_blank">Help</a>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
