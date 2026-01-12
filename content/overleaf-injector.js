@@ -494,9 +494,12 @@
         action: 'getLibraryDocuments',
         payload: { libraryId, forceRefresh }
       });
-      
+
       state.documents = result.documents || [];
       renderDocuments();
+
+      // Update badge to show how many papers are missing from .bib
+      updateSyncButtonBadge();
     } catch (error) {
       setError(error.message);
     } finally {
@@ -1253,6 +1256,8 @@
 
     if (changed) {
       console.log('ADS: .bib file state changed:', bibFile || '(none)');
+      // Update the sync button badge when .bib file changes
+      updateSyncButtonBadge();
     }
 
     // Buttons are now always visible - users can click them even without detection
@@ -1576,6 +1581,83 @@
 
     } catch (error) {
       setError(`Import failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Count how many library papers are NOT in the current .bib file
+   * Used to show notification badge on "Add to .bib" button
+   */
+  async function countMissingInBib() {
+    // Only check if we have documents and a .bib file is open
+    if (!state.documents || state.documents.length === 0) {
+      return 0;
+    }
+
+    if (!state.currentBibFile) {
+      return 0;
+    }
+
+    try {
+      const bibtexContent = await readEditorContent();
+      if (!bibtexContent) return 0;
+
+      // Extract existing bibcodes and DOIs from .bib content
+      const existingBibcodes = new Set();
+      const existingDois = new Set();
+
+      // Match adsurl fields to extract bibcodes
+      const bibcodeMatches = bibtexContent.matchAll(/adsurl\s*=\s*\{[^}]*\/abs\/([^\}\/]+)/gi);
+      for (const match of bibcodeMatches) {
+        existingBibcodes.add(match[1]);
+      }
+
+      // Match DOI fields
+      const doiMatches = bibtexContent.matchAll(/doi\s*=\s*\{([^\}]+)\}/gi);
+      for (const match of doiMatches) {
+        existingDois.add(match[1].toLowerCase());
+      }
+
+      // Check citation keys that look like bibcodes (19 chars, starts with year)
+      const keyMatches = bibtexContent.matchAll(/@\w+\s*\{\s*(\d{4}[A-Za-z&][^\s,]+)/g);
+      for (const match of keyMatches) {
+        if (match[1].length === 19) {
+          existingBibcodes.add(match[1]);
+        }
+      }
+
+      // Count papers NOT in .bib
+      let missingCount = 0;
+      for (const doc of state.documents) {
+        const inBibcode = existingBibcodes.has(doc.bibcode);
+        const inDoi = doc.doi && existingDois.has(doc.doi[0]?.toLowerCase());
+        if (!inBibcode && !inDoi) {
+          missingCount++;
+        }
+      }
+
+      return missingCount;
+    } catch (e) {
+      console.log('ADS: Error counting missing papers:', e);
+      return 0;
+    }
+  }
+
+  /**
+   * Update the "Add to .bib" button with a badge showing missing paper count
+   */
+  async function updateSyncButtonBadge() {
+    const btn = sidebar?.querySelector('#ads-sync-to-bib-btn');
+    if (!btn) return;
+
+    const count = await countMissingInBib();
+
+    if (count > 0) {
+      btn.innerHTML = `<span class="ads-btn-icon">↓</span> Add to .bib <span class="ads-badge">${count}</span>`;
+      btn.title = `${count} paper${count === 1 ? '' : 's'} in library not in your .bib file`;
+    } else {
+      btn.innerHTML = '<span class="ads-btn-icon">↓</span> Add to .bib';
+      btn.title = 'Add missing papers from selected library to .bib file';
     }
   }
 
