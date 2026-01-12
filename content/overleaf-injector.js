@@ -6,6 +6,14 @@
 (function() {
   'use strict';
 
+  // Only run on actual project pages (not the project list)
+  // Project URLs look like: /project/64f1234567890abcdef12345
+  const projectMatch = window.location.pathname.match(/^\/project\/([a-f0-9]{24})$/i);
+  if (!projectMatch) {
+    console.log('ADS for Overleaf: Not a project editor page, skipping initialization');
+    return;
+  }
+
   // Prevent multiple injections
   if (window.adsForOverleafInjected) return;
   window.adsForOverleafInjected = true;
@@ -19,7 +27,9 @@
     isLoading: false,
     error: null,
     preferences: null,
-    sidebarVisible: false
+    sidebarVisible: false,
+    currentBibFile: null, // Name of currently open .bib file (if any)
+    isScrollCollecting: false, // True during scroll-based content collection
   };
 
   // DOM Elements
@@ -206,6 +216,17 @@
         </button>
       </div>
 
+      <div class="ads-bib-actions" id="ads-bib-actions">
+        <button id="ads-import-bib-btn" class="ads-action-btn"
+                title="Import entries from current .bib file to an ADS library">
+          <span class="ads-btn-icon">+</span> Import .bib to ADS
+        </button>
+        <button id="ads-sync-to-bib-btn" class="ads-action-btn"
+                title="Add missing papers from selected library to .bib file">
+          <span class="ads-btn-icon">↓</span> Add to .bib
+        </button>
+      </div>
+
       <div class="ads-tabs" role="tablist" aria-label="Content tabs">
         <button class="ads-tab active" data-tab="libraries" role="tab"
                 aria-selected="true" aria-controls="ads-libraries-tab" id="tab-libraries">Libraries</button>
@@ -250,8 +271,60 @@
       tab.addEventListener('keydown', handleTabKeydown);
     });
 
+    // Import/Sync button handlers
+    sidebar.querySelector('#ads-import-bib-btn').addEventListener('click', showImportModal);
+    sidebar.querySelector('#ads-sync-to-bib-btn').addEventListener('click', syncLibraryToBib);
+
     // Global keyboard handler for the sidebar
     sidebar.addEventListener('keydown', handleSidebarKeydown);
+
+    // Monitor for file changes to update .bib detection
+    // Watch multiple areas where file changes might be reflected
+    const observeTargets = [
+      document.querySelector('.toolbar'),
+      document.querySelector('.editor-toolbar'),
+      document.querySelector('.file-tree'),
+      document.querySelector('[class*="file-tree"]'),
+      document.querySelector('.ide-react-panel'),
+      document.body, // Fallback: watch body for major changes
+    ].filter(Boolean);
+
+    const fileObserver = new MutationObserver(() => {
+      // Skip if we're in the middle of scroll collection
+      if (!state.isScrollCollecting) {
+        updateBibFileState();
+      }
+    });
+
+    observeTargets.forEach(target => {
+      try {
+        fileObserver.observe(target, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+          attributes: true,
+          attributeFilter: ['class', 'aria-selected', 'data-current-file']
+        });
+      } catch (e) {
+        console.log('ADS: Could not observe', target);
+      }
+    });
+
+    // Also check on URL hash changes (Overleaf uses hash for navigation)
+    window.addEventListener('hashchange', () => {
+      console.log('ADS: Hash changed, checking for .bib file');
+      updateBibFileState();
+    });
+
+    // Periodic check as fallback (every 2 seconds)
+    setInterval(updateBibFileState, 2000);
+
+    // Initial .bib file check (multiple times to catch late-loading UI)
+    setTimeout(updateBibFileState, 500);
+    setTimeout(updateBibFileState, 1500);
+    setTimeout(updateBibFileState, 3000);
+
+    console.log('ADS for Overleaf: Import/sync feature initialized');
   }
 
   /**
@@ -859,6 +932,745 @@
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
+  }
+
+  // ============================================================================
+  // BibTeX File Detection and Editing
+  // ============================================================================
+
+  /**
+   * Detect if a .bib file is currently open in the editor
+   * Returns the filename if a .bib file is open, null otherwise
+   */
+  function detectBibFile() {
+    // Strategy 1: Check the URL hash (Overleaf uses hash for file navigation)
+    const hash = window.location.hash;
+    if (hash && hash.includes('.bib')) {
+      const match = hash.match(/([^/]+\.bib)/i);
+      if (match) {
+        console.log('ADS: Detected .bib from URL hash:', match[1]);
+        return match[1];
+      }
+    }
+
+    // Strategy 2: Look for the current file name in Overleaf's toolbar/header area
+    // Overleaf shows filename in various places depending on version
+    const selectors = [
+      // New Overleaf (React-based)
+      '.toolbar-left .name',
+      '.file-tree-item.selected .name',
+      '.entity.selected .name',
+      '[class*="file-tree"] [class*="selected"] [class*="name"]',
+      // Breadcrumb/path display
+      '.toolbar-filename',
+      '.editor-toolbar .filename',
+      // Tab-based display
+      '.nav-tabs .active',
+      '.tab.active .name',
+      // Generic patterns
+      '[data-current-file]',
+      '[aria-current="page"]',
+    ];
+
+    for (const selector of selectors) {
+      try {
+        const elements = document.querySelectorAll(selector);
+        for (const el of elements) {
+          const text = el.textContent?.trim() || el.getAttribute('data-current-file') || '';
+          if (text.endsWith('.bib')) {
+            // Only log if this is a new detection (different from current)
+            if (state.currentBibFile !== text) {
+              console.log('ADS: Detected .bib file:', text);
+            }
+            return text;
+          }
+        }
+      } catch (e) {
+        // Ignore invalid selectors
+      }
+    }
+
+    // Strategy 3: Search more broadly in the toolbar area
+    const toolbar = document.querySelector('.toolbar, .editor-toolbar, [class*="toolbar"]');
+    if (toolbar) {
+      const allText = toolbar.textContent || '';
+      const bibMatch = allText.match(/(\S+\.bib)/i);
+      if (bibMatch) {
+        if (state.currentBibFile !== bibMatch[1]) {
+          console.log('ADS: Detected .bib file:', bibMatch[1]);
+        }
+        return bibMatch[1];
+      }
+    }
+
+    // Strategy 4: Check if any .bib-related classes exist
+    const bibIndicators = document.querySelectorAll('[class*="bib"], [data-file-type="bib"]');
+    for (const el of bibIndicators) {
+      if (el.closest('.selected, .active, [aria-selected="true"]')) {
+        const name = el.textContent?.trim() || 'references.bib';
+        if (name.endsWith('.bib')) {
+          if (state.currentBibFile !== name) {
+            console.log('ADS: Detected .bib file:', name);
+          }
+          return name;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Read the content of the currently open editor
+   * Returns a Promise that resolves to the editor content string
+   *
+   * Note: Uses DOM-based approach to avoid CSP issues with inline scripts.
+   * CodeMirror 6 virtualizes content, so we scroll through the document
+   * to force all content to render, then collect it.
+   */
+  function readEditorContent() {
+    return new Promise(async (resolve) => {
+      // Method 1: Try to get content from CodeMirror's internal state
+      // Look for the editor view stored on DOM elements
+      const cmEditor = document.querySelector('.cm-editor');
+      if (cmEditor) {
+        // Try to find the view through various properties CM6 might use
+        const possibleViewKeys = Object.keys(cmEditor).filter(k =>
+          k.startsWith('__') || k === 'cmView' || k === 'view'
+        );
+
+        for (const key of possibleViewKeys) {
+          try {
+            const obj = cmEditor[key];
+            if (obj && obj.view && obj.view.state && obj.view.state.doc) {
+              const content = obj.view.state.doc.toString();
+              console.log('ADS: Read full content via CM6 view state, length:', content.length);
+              resolve(content);
+              return;
+            }
+            if (obj && obj.state && obj.state.doc) {
+              const content = obj.state.doc.toString();
+              console.log('ADS: Read full content via CM6 state, length:', content.length);
+              resolve(content);
+              return;
+            }
+          } catch (e) {
+            // Continue trying other keys
+          }
+        }
+      }
+
+      // Method 2: For CodeMirror 6, scroll through document to collect all content
+      // CM6 virtualizes rendering, so we need to scroll to force-render all lines
+      const cmScroller = document.querySelector('.cm-scroller');
+      const cmContent = document.querySelector('.cm-content');
+      if (cmScroller && cmContent) {
+        console.log('ADS: Attempting scroll-based content collection for CM6');
+        const content = await scrollAndCollectCM6Content(cmScroller, cmContent);
+        if (content) {
+          console.log('ADS: Collected full content via scroll, length:', content.length);
+          resolve(content);
+          return;
+        }
+      }
+
+      // Method 3: Read from CodeMirror 6 visible content (fallback)
+      if (cmContent) {
+        const lines = cmContent.querySelectorAll('.cm-line');
+        if (lines.length > 0) {
+          const content = Array.from(lines).map(line => line.textContent).join('\n');
+          console.log('ADS: Read content via cm-line elements, length:', content.length, '(visible lines:', lines.length, ')');
+          resolve(content);
+          return;
+        }
+
+        const content = cmContent.textContent;
+        if (content) {
+          console.log('ADS: Read content via cm-content textContent, length:', content.length);
+          resolve(content);
+          return;
+        }
+      }
+
+      // Method 4: Try Ace editor
+      const aceContent = document.querySelector('.ace_text-layer');
+      if (aceContent) {
+        const lines = aceContent.querySelectorAll('.ace_line');
+        if (lines.length > 0) {
+          const content = Array.from(lines).map(line => line.textContent).join('\n');
+          console.log('ADS: Read content via ace_line elements, length:', content.length);
+          resolve(content);
+          return;
+        }
+      }
+
+      // Method 5: Try any visible editor content
+      const editorContainer = document.querySelector('.editor-container, .cm-editor, .ace_editor');
+      if (editorContainer) {
+        const content = editorContainer.textContent;
+        if (content && content.trim().length > 0) {
+          console.log('ADS: Read content via editor container, length:', content.length);
+          resolve(content);
+          return;
+        }
+      }
+
+      console.log('ADS: Could not read editor content');
+      resolve(null);
+    });
+  }
+
+  /**
+   * Scroll through CM6 editor to collect all content
+   * CM6 virtualizes content, only rendering visible lines.
+   * We scroll through the document, collecting line data as we go.
+   * Uses line numbers from the gutter to accurately track lines.
+   */
+  async function scrollAndCollectCM6Content(scroller, content) {
+    const originalScroll = scroller.scrollTop;
+    const scrollHeight = scroller.scrollHeight;
+    const clientHeight = scroller.clientHeight;
+
+    // If document fits in view, just read what's visible
+    if (scrollHeight <= clientHeight + 50) {
+      const lines = content.querySelectorAll('.cm-line');
+      return Array.from(lines).map(line => line.textContent).join('\n');
+    }
+
+    // Map to collect unique lines by line number
+    const lineMap = new Map(); // lineNumber -> content
+
+    // Function to collect currently visible lines using gutter line numbers
+    function collectVisibleLines() {
+      // Get line numbers from gutter
+      const gutterLines = document.querySelectorAll('.cm-lineNumbers .cm-gutterElement');
+      const contentLines = content.querySelectorAll('.cm-line');
+
+      // Match gutter line numbers with content lines by position
+      gutterLines.forEach(gutterEl => {
+        const lineNum = parseInt(gutterEl.textContent, 10);
+        if (isNaN(lineNum)) return;
+
+        // Find the content line at the same vertical position
+        const gutterRect = gutterEl.getBoundingClientRect();
+
+        for (const line of contentLines) {
+          const lineRect = line.getBoundingClientRect();
+          // Lines are aligned if their tops are within a few pixels
+          if (Math.abs(lineRect.top - gutterRect.top) < 5) {
+            if (!lineMap.has(lineNum)) {
+              lineMap.set(lineNum, line.textContent);
+            }
+            break;
+          }
+        }
+      });
+
+      // Fallback: if no gutter, use order-based approach
+      if (gutterLines.length === 0) {
+        // Estimate line number from scroll position and line height
+        const firstLine = contentLines[0];
+        if (firstLine) {
+          const lineHeight = firstLine.getBoundingClientRect().height || 20;
+          const estimatedFirstLine = Math.floor(scroller.scrollTop / lineHeight) + 1;
+          contentLines.forEach((line, idx) => {
+            const lineNum = estimatedFirstLine + idx;
+            if (!lineMap.has(lineNum)) {
+              lineMap.set(lineNum, line.textContent);
+            }
+          });
+        }
+      }
+    }
+
+    // Scroll through document in chunks
+    const scrollStep = clientHeight - 50; // Small overlap to not miss lines
+    let currentScroll = 0;
+
+    console.log('ADS: Starting scroll collection, scrollHeight:', scrollHeight);
+    state.isScrollCollecting = true;
+
+    try {
+      while (currentScroll < scrollHeight) {
+        scroller.scrollTop = currentScroll;
+        await sleep(30); // Brief delay for rendering
+        collectVisibleLines();
+        currentScroll += scrollStep;
+      }
+
+      // Scroll to end to get last lines
+      scroller.scrollTop = scrollHeight;
+      await sleep(30);
+      collectVisibleLines();
+
+      console.log('ADS: Collected', lineMap.size, 'unique lines');
+
+    } finally {
+      // Restore original scroll position and clear flag
+      scroller.scrollTop = originalScroll;
+      state.isScrollCollecting = false;
+    }
+
+    // Sort lines by line number and join
+    const sortedLines = Array.from(lineMap.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(entry => entry[1]);
+
+    return sortedLines.join('\n');
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Append text to the end of the editor content
+   * Returns a Promise that resolves to true if successful
+   *
+   * Note: Due to CSP restrictions, we can't directly modify the editor.
+   * Instead, we copy the text to clipboard and notify the user.
+   */
+  async function appendToEditor(text) {
+    // Due to CSP restrictions, we cannot inject scripts to modify the editor directly.
+    // The best we can do is copy to clipboard and let the user paste.
+    try {
+      await navigator.clipboard.writeText(text);
+      console.log('ADS: Copied text to clipboard for manual pasting');
+      return false; // Return false to indicate manual paste is needed
+    } catch (e) {
+      console.error('ADS: Failed to copy to clipboard:', e);
+      return false;
+    }
+  }
+
+  /**
+   * Update the UI based on whether a .bib file is currently open
+   */
+  function updateBibFileState() {
+    const bibFile = detectBibFile();
+    const changed = state.currentBibFile !== bibFile;
+    state.currentBibFile = bibFile;
+
+    if (changed) {
+      console.log('ADS: .bib file state changed:', bibFile || '(none)');
+    }
+
+    // Buttons are now always visible - users can click them even without detection
+    // The import will read whatever is in the editor
+
+    return bibFile;
+  }
+
+  // ============================================================================
+  // Import Modal and Logic
+  // ============================================================================
+
+  let importModal = null;
+
+  /**
+   * Show the import modal
+   */
+  async function showImportModal() {
+    // Try to detect .bib file, but don't require it
+    const bibFile = updateBibFileState() || 'current file';
+
+    // Create modal if it doesn't exist
+    if (!importModal) {
+      createImportModal();
+    }
+
+    // Reset modal state
+    const modalContent = importModal.querySelector('.ads-modal-body');
+    modalContent.innerHTML = `
+      <div class="ads-import-step" id="ads-import-step-config">
+        <p>Import entries from <strong>${escapeHtml(bibFile)}</strong> to an ADS library.</p>
+
+        <div class="ads-form-group">
+          <label>
+            <input type="radio" name="ads-import-target" value="new" checked>
+            Create new library
+          </label>
+          <div class="ads-indent" id="ads-new-lib-fields">
+            <input type="text" id="ads-new-lib-name" placeholder="Library name" />
+            <input type="text" id="ads-new-lib-desc" placeholder="Description (optional)" />
+          </div>
+        </div>
+
+        <div class="ads-form-group">
+          <label>
+            <input type="radio" name="ads-import-target" value="existing">
+            Add to existing library
+          </label>
+          <div class="ads-indent" id="ads-existing-lib-fields" style="display:none">
+            <select id="ads-import-lib-select">
+              <option value="">Select a library...</option>
+              ${state.libraries.map(lib => `<option value="${lib.id}">${escapeHtml(lib.name)}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        <div class="ads-modal-actions">
+          <button id="ads-import-scan-btn" class="ads-btn primary">Scan & Import</button>
+          <button id="ads-import-cancel-btn" class="ads-btn secondary">Cancel</button>
+        </div>
+      </div>
+
+      <div class="ads-import-step" id="ads-import-step-progress" style="display:none">
+        <div class="ads-progress">
+          <div class="ads-progress-bar indeterminate" id="ads-import-progress-bar"></div>
+        </div>
+        <p id="ads-import-progress-text" class="ads-progress-status">
+          <span class="ads-spinner"></span>Processing...
+        </p>
+      </div>
+
+      <div class="ads-import-step" id="ads-import-step-results" style="display:none">
+        <div id="ads-import-results"></div>
+        <div class="ads-modal-actions">
+          <button id="ads-import-confirm-btn" class="ads-btn primary">Create Library</button>
+          <button id="ads-import-back-btn" class="ads-btn secondary">Back</button>
+        </div>
+      </div>
+    `;
+
+    // Add event listeners
+    modalContent.querySelectorAll('input[name="ads-import-target"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        const newFields = modalContent.querySelector('#ads-new-lib-fields');
+        const existingFields = modalContent.querySelector('#ads-existing-lib-fields');
+        if (e.target.value === 'new') {
+          newFields.style.display = 'block';
+          existingFields.style.display = 'none';
+        } else {
+          newFields.style.display = 'none';
+          existingFields.style.display = 'block';
+        }
+      });
+    });
+
+    modalContent.querySelector('#ads-import-scan-btn').addEventListener('click', startImportScan);
+    modalContent.querySelector('#ads-import-cancel-btn').addEventListener('click', hideImportModal);
+
+    // Show modal
+    importModal.classList.add('visible');
+  }
+
+  /**
+   * Create the import modal element
+   */
+  function createImportModal() {
+    importModal = document.createElement('div');
+    importModal.id = 'ads-import-modal';
+    importModal.className = 'ads-modal';
+    importModal.innerHTML = `
+      <div class="ads-modal-content">
+        <div class="ads-modal-header">
+          <h3>Import to ADS Library</h3>
+          <button class="ads-modal-close">&times;</button>
+        </div>
+        <div class="ads-modal-body"></div>
+      </div>
+    `;
+
+    document.body.appendChild(importModal);
+
+    // Close button
+    importModal.querySelector('.ads-modal-close').addEventListener('click', hideImportModal);
+
+    // Click outside to close
+    importModal.addEventListener('click', (e) => {
+      if (e.target === importModal) {
+        hideImportModal();
+      }
+    });
+  }
+
+  /**
+   * Hide the import modal
+   */
+  function hideImportModal() {
+    if (importModal) {
+      importModal.classList.remove('visible');
+    }
+  }
+
+  /**
+   * Start the import scan process
+   */
+  async function startImportScan() {
+    console.log('ADS: Starting import scan...');
+
+    const modalContent = importModal.querySelector('.ads-modal-body');
+    const configStep = modalContent.querySelector('#ads-import-step-config');
+    const progressStep = modalContent.querySelector('#ads-import-step-progress');
+    const resultsStep = modalContent.querySelector('#ads-import-step-results');
+
+    // Get configuration
+    const isNewLibrary = modalContent.querySelector('input[name="ads-import-target"]:checked').value === 'new';
+    const newLibName = modalContent.querySelector('#ads-new-lib-name').value.trim();
+    const newLibDesc = modalContent.querySelector('#ads-new-lib-desc').value.trim();
+    const existingLibId = modalContent.querySelector('#ads-import-lib-select').value;
+
+    console.log('ADS: Config - isNewLibrary:', isNewLibrary, 'name:', newLibName);
+
+    if (isNewLibrary && !newLibName) {
+      setError('Please enter a library name');
+      return;
+    }
+    if (!isNewLibrary && !existingLibId) {
+      setError('Please select a library');
+      return;
+    }
+
+    // Switch to progress view immediately
+    configStep.style.display = 'none';
+    progressStep.style.display = 'block';
+
+    const progressBar = modalContent.querySelector('#ads-import-progress-bar');
+    const progressText = modalContent.querySelector('#ads-import-progress-text');
+
+    // Phase 1: Reading file
+    progressText.innerHTML = '<span class="ads-spinner"></span>Reading file...';
+    console.log('ADS: Reading editor content...');
+
+    const bibtexContent = await readEditorContent();
+    console.log('ADS: Editor content length:', bibtexContent?.length || 0);
+
+    if (!bibtexContent) {
+      progressStep.style.display = 'none';
+      configStep.style.display = 'block';
+      setError('Could not read editor content. Make sure a .bib file is open in the editor.');
+      return;
+    }
+
+    try {
+      // Phase 2: Resolving entries
+      progressText.innerHTML = '<span class="ads-spinner"></span>Resolving entries (this may take a while)...';
+      console.log('ADS: Sending resolveBibtex request...');
+
+      const result = await sendMessage({
+        action: 'resolveBibtex',
+        payload: { bibtexContent }
+      });
+      console.log('ADS: Got result:', result);
+
+      // Phase 3: Show results
+      progressBar.classList.remove('indeterminate');
+      progressStep.style.display = 'none';
+      resultsStep.style.display = 'block';
+
+      const { categorized } = result;
+      const resultsDiv = modalContent.querySelector('#ads-import-results');
+
+      resultsDiv.innerHTML = `
+        <div class="ads-import-summary">
+          <p><strong>Found:</strong> ${categorized.stats.foundCount} papers</p>
+          <p><strong>Not found:</strong> ${categorized.stats.notFoundCount} entries</p>
+          ${categorized.stats.errorCount > 0 ? `<p><strong>Errors:</strong> ${categorized.stats.errorCount}</p>` : ''}
+        </div>
+
+        ${categorized.found.length > 0 ? `
+          <details class="ads-import-details" open>
+            <summary>Papers to add (${categorized.found.length})</summary>
+            <ul class="ads-import-list">
+              ${categorized.found.map(r => `
+                <li class="ads-import-item found">
+                  <span class="ads-import-key">${escapeHtml(r.citeKey)}</span>
+                  <span class="ads-import-method">(${r.method})</span>
+                </li>
+              `).join('')}
+            </ul>
+          </details>
+        ` : ''}
+
+        ${categorized.notFound.length > 0 ? `
+          <details class="ads-import-details">
+            <summary>Not found (${categorized.notFound.length})</summary>
+            <ul class="ads-import-list">
+              ${categorized.notFound.map(r => `
+                <li class="ads-import-item not-found">
+                  <span class="ads-import-key">${escapeHtml(r.citeKey)}</span>
+                  ${r.fields?.title ? `<span class="ads-import-title">${escapeHtml(r.fields.title.substring(0, 50))}...</span>` : ''}
+                </li>
+              `).join('')}
+            </ul>
+          </details>
+        ` : ''}
+      `;
+
+      // Store results for confirmation
+      importModal.dataset.resolvedBibcodes = JSON.stringify(categorized.found.map(r => r.bibcode));
+      importModal.dataset.isNewLibrary = isNewLibrary;
+      importModal.dataset.newLibName = newLibName;
+      importModal.dataset.newLibDesc = newLibDesc;
+      importModal.dataset.existingLibId = existingLibId;
+
+      // Add confirm button handler
+      const confirmBtn = modalContent.querySelector('#ads-import-confirm-btn');
+      confirmBtn.textContent = isNewLibrary ? 'Create Library' : 'Add to Library';
+      confirmBtn.onclick = confirmImport;
+
+      const backBtn = modalContent.querySelector('#ads-import-back-btn');
+      backBtn.onclick = () => {
+        resultsStep.style.display = 'none';
+        configStep.style.display = 'block';
+      };
+
+    } catch (error) {
+      progressStep.style.display = 'none';
+      configStep.style.display = 'block';
+      setError(`Import failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Confirm and execute the import
+   */
+  async function confirmImport() {
+    const bibcodes = JSON.parse(importModal.dataset.resolvedBibcodes || '[]');
+    const isNewLibrary = importModal.dataset.isNewLibrary === 'true';
+    const newLibName = importModal.dataset.newLibName;
+    const newLibDesc = importModal.dataset.newLibDesc;
+    const existingLibId = importModal.dataset.existingLibId;
+
+    if (bibcodes.length === 0) {
+      setError('No papers to import');
+      return;
+    }
+
+    try {
+      setStatus('Creating library...');
+
+      if (isNewLibrary) {
+        // Create new library with papers
+        const result = await sendMessage({
+          action: 'createLibrary',
+          payload: {
+            name: newLibName,
+            options: {
+              description: newLibDesc || `Imported from Overleaf on ${new Date().toLocaleDateString()}`,
+              bibcodes: bibcodes,
+              isPublic: false
+            }
+          }
+        });
+
+        setStatus(`Created library "${newLibName}" with ${bibcodes.length} papers`);
+      } else {
+        // Add to existing library
+        const result = await sendMessage({
+          action: 'addToLibrary',
+          payload: {
+            libraryId: existingLibId,
+            bibcodes: bibcodes
+          }
+        });
+
+        setStatus(`Added ${result.added} papers to library`);
+      }
+
+      // Refresh libraries list
+      await loadLibraries(true);
+
+      hideImportModal();
+
+    } catch (error) {
+      setError(`Import failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Sync papers from selected library to the .bib file (add-only)
+   */
+  async function syncLibraryToBib() {
+    // Try to detect .bib file
+    updateBibFileState();
+
+    if (!state.currentLibrary) {
+      setError('Please select a library first');
+      return;
+    }
+
+    setStatus('Reading .bib file...');
+
+    try {
+      // Read current .bib content
+      const bibtexContent = await readEditorContent();
+      if (!bibtexContent) {
+        setError('Could not read editor content');
+        return;
+      }
+
+      // Get library documents
+      setStatus('Fetching library...');
+      const libraryResult = await sendMessage({
+        action: 'getLibraryDocuments',
+        payload: { libraryId: state.currentLibrary, forceRefresh: true }
+      });
+
+      const libraryDocs = libraryResult.documents || [];
+
+      // Parse existing .bib to find which keys already exist
+      // We need to compare bibcodes
+      const existingBibcodes = new Set();
+      const existingDois = new Set();
+
+      // Simple regex to extract bibcodes and DOIs from existing .bib
+      const bibcodeMatches = bibtexContent.matchAll(/adsurl\s*=\s*\{[^}]*\/abs\/([^\}\/]+)/gi);
+      for (const match of bibcodeMatches) {
+        existingBibcodes.add(match[1]);
+      }
+
+      const doiMatches = bibtexContent.matchAll(/doi\s*=\s*\{([^\}]+)\}/gi);
+      for (const match of doiMatches) {
+        existingDois.add(match[1].toLowerCase());
+      }
+
+      // Also check citation keys that look like bibcodes
+      const keyMatches = bibtexContent.matchAll(/@\w+\s*\{\s*(\d{4}[A-Za-z&][^\s,]+)/g);
+      for (const match of keyMatches) {
+        if (match[1].length === 19) {
+          existingBibcodes.add(match[1]);
+        }
+      }
+
+      // Find papers that are NOT in the .bib file
+      const missingPapers = libraryDocs.filter(doc => {
+        if (existingBibcodes.has(doc.bibcode)) return false;
+        if (doc.doi && existingDois.has(doc.doi[0]?.toLowerCase())) return false;
+        return true;
+      });
+
+      if (missingPapers.length === 0) {
+        setStatus('All library papers are already in .bib file');
+        return;
+      }
+
+      // Export BibTeX for missing papers
+      setStatus(`Exporting ${missingPapers.length} papers...`);
+      const exportResult = await sendMessage({
+        action: 'exportBibtex',
+        payload: {
+          bibcodes: missingPapers.map(p => p.bibcode),
+          options: state.preferences || {}
+        }
+      });
+
+      // Append to editor
+      const newBibtex = '\n\n' + exportResult.bibtex;
+      const success = await appendToEditor(newBibtex);
+
+      if (success) {
+        setStatus(`Added ${missingPapers.length} entries to .bib file`);
+      } else {
+        // Fallback: copy to clipboard
+        await copyToClipboard(exportResult.bibtex);
+        setStatus(`Copied ${missingPapers.length} entries to clipboard (paste manually)`);
+      }
+
+    } catch (error) {
+      setError(`Sync failed: ${error.message}`);
+    }
   }
 
   // Initialize when DOM is ready

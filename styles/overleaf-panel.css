@@ -363,6 +363,303 @@
   }
 }
 
+/* BibTeX Actions Bar */
+.ads-bib-actions {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #e8f0fe;
+  border-bottom: 1px solid #d2e3fc;
+}
+
+.ads-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ads-action-btn:hover {
+  background: #1557b0;
+}
+
+.ads-btn-icon {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Modal styles */
+.ads-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10002;
+  align-items: center;
+  justify-content: center;
+}
+
+.ads-modal.visible {
+  display: flex;
+}
+
+.ads-modal-content {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+.ads-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.ads-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.ads-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #5f6368;
+  padding: 0;
+  line-height: 1;
+}
+
+.ads-modal-close:hover {
+  color: #202124;
+}
+
+.ads-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.ads-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.ads-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ads-btn.primary {
+  background: #1a73e8;
+  color: white;
+}
+
+.ads-btn.primary:hover {
+  background: #1557b0;
+}
+
+.ads-btn.secondary {
+  background: #f1f3f4;
+  color: #5f6368;
+}
+
+.ads-btn.secondary:hover {
+  background: #e8eaed;
+}
+
+/* Import form styles */
+.ads-form-group {
+  margin-bottom: 16px;
+}
+
+.ads-form-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.ads-form-group input[type="radio"] {
+  margin: 0;
+}
+
+.ads-indent {
+  margin-left: 24px;
+  margin-top: 8px;
+}
+
+.ads-indent input,
+.ads-indent select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.ads-indent input:focus,
+.ads-indent select:focus {
+  border-color: #1a73e8;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
+}
+
+/* Progress bar */
+.ads-progress {
+  height: 4px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 12px 0;
+}
+
+.ads-progress-bar {
+  height: 100%;
+  background: #1a73e8;
+  transition: width 0.3s;
+}
+
+/* Indeterminate progress animation */
+.ads-progress-bar.indeterminate {
+  width: 100% !important;
+  background: linear-gradient(90deg, #e0e0e0 0%, #1a73e8 50%, #e0e0e0 100%);
+  background-size: 200% 100%;
+  animation: indeterminate 1.5s infinite linear;
+}
+
+@keyframes indeterminate {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Spinner */
+.ads-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #1a73e8;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Progress status text */
+.ads-progress-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5f6368;
+  font-size: 14px;
+  margin-top: 12px;
+}
+
+/* Import results */
+.ads-import-summary {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.ads-import-summary p {
+  margin: 4px 0;
+}
+
+.ads-import-details {
+  margin-bottom: 12px;
+}
+
+.ads-import-details summary {
+  cursor: pointer;
+  font-weight: 500;
+  padding: 8px 0;
+}
+
+.ads-import-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.ads-import-item {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f3f4;
+  font-size: 13px;
+}
+
+.ads-import-item:last-child {
+  border-bottom: none;
+}
+
+.ads-import-item.found {
+  background: #e6f4ea;
+}
+
+.ads-import-item.not-found {
+  background: #fce8e6;
+}
+
+.ads-import-key {
+  font-family: monospace;
+  font-weight: 500;
+}
+
+.ads-import-method {
+  color: #5f6368;
+  font-size: 11px;
+  margin-left: 8px;
+}
+
+.ads-import-title {
+  display: block;
+  color: #5f6368;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
 /* Dark mode support (if Overleaf adds it) */
 @media (prefers-color-scheme: dark) {
   .ads-sidebar {

@@ -5,6 +5,7 @@
 
 // ES Module imports from shared library
 import { ADSClient, ADSError, Storage, BibtexUtils } from '../lib/shared-import.js';
+import { resolveEntries, categorizeResults } from '../lib/bibtex-resolver.js';
 
 // Message handler
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -35,6 +36,12 @@ async function handleMessage(message, sender) {
 
     case 'addToLibrary':
       return await addToLibrary(payload.libraryId, payload.bibcodes);
+
+    case 'createLibrary':
+      return await createLibrary(payload.name, payload.options);
+
+    case 'resolveBibtex':
+      return await resolveBibtex(payload.bibtexContent);
 
     case 'getPreferences':
       return await Storage.getPreferences();
@@ -138,11 +145,93 @@ async function exportBibtex(bibcodes, options = {}) {
 async function addToLibrary(libraryId, bibcodes) {
   const client = await getClient();
   const result = await client.addToLibrary(libraryId, bibcodes);
-  
+
   // Clear cache for this library
   await Storage.remove([`libDocs_${libraryId}`, `libDocsTime_${libraryId}`]);
-  
+
   return result;
+}
+
+/**
+ * Create a new ADS library
+ * @param {string} name - Library name
+ * @param {Object} options - Optional settings (description, bibcodes, isPublic)
+ */
+async function createLibrary(name, options = {}) {
+  const client = await getClient();
+  const result = await client.createLibrary(name, options);
+
+  // Clear libraries cache so the new library shows up
+  await Storage.remove(['libraries', 'librariesTime']);
+
+  return result;
+}
+
+/**
+ * Resolve BibTeX entries to ADS bibcodes
+ * @param {string} bibtexContent - Raw BibTeX content
+ * @returns {Object} Resolution results with found/notFound categorization
+ */
+async function resolveBibtex(bibtexContent) {
+  const client = await getClient();
+
+  // Parse BibTeX content
+  const entries = BibtexUtils.parseBibtex(bibtexContent);
+
+  if (entries.length === 0) {
+    return {
+      results: [],
+      categorized: {
+        found: [],
+        notFound: [],
+        errors: [],
+        stats: { total: 0, foundCount: 0, notFoundCount: 0, errorCount: 0, byMethod: {} },
+      },
+    };
+  }
+
+  // Convert parsed entries to format expected by resolver
+  // The parseBibtex adapter returns { type, key, raw } format for compatibility
+  // We need to convert to { citeKey, entryType, fields } format
+  const normalizedEntries = entries.map(entry => ({
+    citeKey: entry.key,
+    entryType: entry.type,
+    fields: extractFieldsFromRaw(entry.raw),
+  }));
+
+  // Create search function wrapper
+  const searchFn = async (query, rows) => {
+    return await client.search(query, rows);
+  };
+
+  // Resolve entries
+  const results = await resolveEntries(normalizedEntries, searchFn, null, 150);
+
+  // Categorize results
+  const categorized = categorizeResults(results);
+
+  return { results, categorized };
+}
+
+/**
+ * Extract fields from raw BibTeX string
+ * @param {string} rawBibtex - Raw BibTeX entry
+ * @returns {Object} Extracted fields
+ */
+function extractFieldsFromRaw(rawBibtex) {
+  const fields = {};
+
+  // Match field = {value} or field = "value" or field = number
+  const fieldRegex = /(\w+)\s*=\s*(?:\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}|"([^"]*)"|(\d+))/g;
+
+  let match;
+  while ((match = fieldRegex.exec(rawBibtex)) !== null) {
+    const fieldName = match[1].toLowerCase();
+    const value = match[2] ?? match[3] ?? match[4] ?? '';
+    fields[fieldName] = value.trim();
+  }
+
+  return fields;
 }
 
 // Handle keyboard shortcut
