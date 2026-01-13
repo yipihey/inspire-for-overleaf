@@ -243,6 +243,8 @@
               <option value="">Select a library...</option>
             </select>
             <button id="ads-refresh-btn" title="Refresh libraries" aria-label="Refresh library list">↻</button>
+            <a id="ads-library-link" href="#" target="_blank" rel="noopener noreferrer"
+               title="Open library in ADS" aria-label="Open selected library in NASA ADS">↗</a>
           </div>
           <div id="ads-documents-list" class="ads-list" role="list" aria-label="Documents in library"></div>
         </div>
@@ -458,14 +460,21 @@
    */
   function renderLibrarySelector() {
     const select = sidebar.querySelector('#ads-library-select');
+    const currentValue = select.value; // Preserve current selection
+
     select.innerHTML = '<option value="">Select a library...</option>';
-    
+
     state.libraries.forEach(lib => {
       const option = document.createElement('option');
       option.value = lib.id;
       option.textContent = `${lib.name} (${lib.num_documents})`;
       select.appendChild(option);
     });
+
+    // Restore selection if library still exists
+    if (currentValue && state.libraries.some(lib => lib.id === currentValue)) {
+      select.value = currentValue;
+    }
   }
 
   /**
@@ -473,14 +482,19 @@
    */
   async function handleLibraryChange(event) {
     const libraryId = event.target.value;
+    const linkBtn = sidebar.querySelector('#ads-library-link');
+
     if (!libraryId) {
       state.currentLibrary = null;
       state.documents = [];
+      linkBtn.style.display = 'none';
       renderDocuments();
       return;
     }
 
     state.currentLibrary = libraryId;
+    linkBtn.href = `https://ui.adsabs.harvard.edu/user/libraries/${libraryId}`;
+    linkBtn.style.display = 'inline-flex';
     await loadDocuments(libraryId);
   }
 
