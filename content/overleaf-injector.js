@@ -1560,6 +1560,8 @@
     try {
       setStatus('Creating library...');
 
+      let newLibraryId = null;
+
       if (isNewLibrary) {
         // Create new library with papers
         const result = await sendMessage({
@@ -1574,6 +1576,7 @@
           }
         });
 
+        newLibraryId = result.id;
         setStatus(`Created library "${newLibName}" with ${bibcodes.length} papers`);
       } else {
         // Add to existing library
@@ -1585,11 +1588,22 @@
           }
         });
 
+        newLibraryId = existingLibId;
         setStatus(`Added ${result.added} papers to library`);
       }
 
       // Refresh libraries list
       await loadLibraries(true);
+
+      // Auto-select the new/updated library
+      if (newLibraryId) {
+        const select = sidebar.querySelector('#ads-library-select');
+        if (select) {
+          select.value = newLibraryId;
+          // Trigger the change handler to load documents
+          await handleLibraryChange({ target: select });
+        }
+      }
 
       hideImportModal();
 
@@ -1620,14 +1634,14 @@
       const existingBibcodes = new Set();
       const existingDois = new Set();
 
-      // Match adsurl fields to extract bibcodes
-      const bibcodeMatches = bibtexContent.matchAll(/adsurl\s*=\s*\{[^}]*\/abs\/([^\}\/]+)/gi);
+      // Match adsurl fields to extract bibcodes (use non-greedy match)
+      const bibcodeMatches = bibtexContent.matchAll(/\/abs\/([A-Za-z0-9.]+)/gi);
       for (const match of bibcodeMatches) {
         existingBibcodes.add(match[1]);
       }
 
-      // Match DOI fields
-      const doiMatches = bibtexContent.matchAll(/doi\s*=\s*\{([^\}]+)\}/gi);
+      // Match DOI fields (handle both brace and quote delimiters)
+      const doiMatches = bibtexContent.matchAll(/doi\s*=\s*[{"]([^}"]+)[}"]/gi);
       for (const match of doiMatches) {
         existingDois.add(match[1].toLowerCase());
       }
@@ -1640,14 +1654,23 @@
         }
       }
 
+      // Debug: log what we found
+      console.log(`ADS: Found ${existingBibcodes.size} bibcodes and ${existingDois.size} DOIs in .bib`);
+
       // Count papers NOT in .bib
       let missingCount = 0;
+      const missingPapers = [];
       for (const doc of state.documents) {
         const inBibcode = existingBibcodes.has(doc.bibcode);
         const inDoi = doc.doi && existingDois.has(doc.doi[0]?.toLowerCase());
         if (!inBibcode && !inDoi) {
           missingCount++;
+          missingPapers.push(doc.bibcode);
         }
+      }
+
+      if (missingCount > 0) {
+        console.log(`ADS: ${missingCount} papers not in .bib:`, missingPapers.slice(0, 5));
       }
 
       return missingCount;
