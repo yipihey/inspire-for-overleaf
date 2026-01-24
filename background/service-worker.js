@@ -1,11 +1,21 @@
 /**
  * Background Service Worker
- * Handles ADS API requests and message passing
+ * Handles INSPIRE API requests and message passing
  */
 
 // ES Module imports from shared library
-import { ADSClient, ADSError, Storage, BibtexUtils } from '../lib/shared-import.js';
+import { INSPIREClient, INSPIREError, Storage, BibtexUtils } from '../lib/shared-import.js';
 import { resolveEntries, categorizeResults } from '../lib/bibtex-resolver.js';
+
+// Singleton INSPIRE client (no auth required)
+let client = null;
+
+function getClient() {
+  if (!client) {
+    client = new INSPIREClient();
+  }
+  return client;
+}
 
 // Message handler
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -19,30 +29,53 @@ async function handleMessage(message, sender) {
   const { action, payload } = message;
 
   switch (action) {
-    case 'validateToken':
-      return await validateToken(payload.token);
-
-    case 'getLibraries':
-      return await getLibraries(payload?.forceRefresh);
-
-    case 'getLibraryDocuments':
-      return await getLibraryDocuments(payload.libraryId, payload.forceRefresh);
-
+    // Search INSPIRE
     case 'search':
-      return await search(payload.query, payload.rows, payload.start);
+      return await search(payload.query, payload.rows, payload.page);
 
+    // Export BibTeX for record IDs
     case 'exportBibtex':
-      return await exportBibtex(payload.bibcodes, payload.options);
+      return await exportBibtex(payload.recids || payload.bibcodes);
 
-    case 'addToLibrary':
-      return await addToLibrary(payload.libraryId, payload.bibcodes);
+    // Lookup by DOI
+    case 'lookupByDOI':
+      return await lookupByDOI(payload.doi);
 
-    case 'createLibrary':
-      return await createLibrary(payload.name, payload.options);
+    // Lookup by arXiv ID
+    case 'lookupByArxiv':
+      return await lookupByArxiv(payload.arxivId);
 
+    // Get single record
+    case 'getRecord':
+      return await getRecord(payload.recid);
+
+    // Resolve BibTeX to INSPIRE records
     case 'resolveBibtex':
       return await resolveBibtex(payload.bibtexContent);
 
+    // Get cached .bib file content
+    case 'getBibFile':
+      return await Storage.getBibFileContent();
+
+    // Set cached .bib file content
+    case 'setBibFile':
+      await Storage.setBibFileContent(payload.content, payload.fileName);
+      return { success: true };
+
+    // Get parsed papers from .bib file
+    case 'getParsedPapers':
+      return await getParsedPapers();
+
+    // Parse .bib content and cache it
+    case 'parseBibFile':
+      return await parseBibFile(payload.content, payload.fileName);
+
+    // Clear .bib file cache
+    case 'clearBibFile':
+      await Storage.clearBibFile();
+      return { success: true };
+
+    // User preferences
     case 'getPreferences':
       return await Storage.getPreferences();
 
@@ -50,6 +83,7 @@ async function handleMessage(message, sender) {
       await Storage.setPreferences(payload);
       return { success: true };
 
+    // Clear all caches
     case 'clearCaches':
       await Storage.clearCaches();
       return { success: true };
@@ -60,121 +94,80 @@ async function handleMessage(message, sender) {
 }
 
 /**
- * Get an authenticated ADS client
+ * Search INSPIRE
  */
-async function getClient() {
-  const token = await Storage.getToken();
-  if (!token) {
-    throw new Error('ADS API token not configured. Please set your token in the extension options.');
-  }
-  return new ADSClient(token);
+async function search(query, rows = 20, page = 1) {
+  const inspireClient = getClient();
+  return await inspireClient.search(query, rows, page);
 }
 
 /**
- * Validate an API token
+ * Export BibTeX for record IDs
  */
-async function validateToken(token) {
-  const client = new ADSClient(token);
-  const result = await client.validateToken();
-  
-  if (result.valid) {
-    await Storage.setToken(token);
-  }
-  
-  return result;
-}
-
-/**
- * Get user's ADS libraries
- */
-async function getLibraries(forceRefresh = false) {
-  if (!forceRefresh) {
-    const cached = await Storage.getCachedLibraries();
-    if (cached) {
-      return { libraries: cached, fromCache: true };
-    }
-  }
-
-  const client = await getClient();
-  const libraries = await client.getLibraries();
-  
-  await Storage.setCachedLibraries(libraries);
-  
-  return { libraries, fromCache: false };
-}
-
-/**
- * Get documents from a library
- */
-async function getLibraryDocuments(libraryId, forceRefresh = false) {
-  if (!forceRefresh) {
-    const cached = await Storage.getCachedLibraryDocs(libraryId);
-    if (cached) {
-      return { documents: cached, fromCache: true };
-    }
-  }
-
-  const client = await getClient();
-  // Fetch up to 3000 documents to support large libraries
-  const result = await client.getLibraryDocuments(libraryId, 0, 3000);
-
-  await Storage.setCachedLibraryDocs(libraryId, result.documents);
-
-  return { documents: result.documents, fromCache: false };
-}
-
-/**
- * Search ADS
- */
-async function search(query, rows = 20, start = 0) {
-  const client = await getClient();
-  return await client.search(query, rows, start);
-}
-
-/**
- * Export bibcodes to BibTeX
- */
-async function exportBibtex(bibcodes, options = {}) {
-  const client = await getClient();
-  const bibtex = await client.exportBibtex(bibcodes, options);
+async function exportBibtex(recids) {
+  const inspireClient = getClient();
+  const bibtex = await inspireClient.exportBibtex(recids);
   return { bibtex };
 }
 
 /**
- * Add papers to a library
+ * Lookup by DOI
  */
-async function addToLibrary(libraryId, bibcodes) {
-  const client = await getClient();
-  const result = await client.addToLibrary(libraryId, bibcodes);
-
-  // Clear cache for this library
-  await Storage.remove([`libDocs_${libraryId}`, `libDocsTime_${libraryId}`]);
-
-  return result;
+async function lookupByDOI(doi) {
+  const inspireClient = getClient();
+  const doc = await inspireClient.lookupByDOI(doi);
+  return { document: doc };
 }
 
 /**
- * Create a new ADS library
- * @param {string} name - Library name
- * @param {Object} options - Optional settings (description, bibcodes, isPublic)
+ * Lookup by arXiv ID
  */
-async function createLibrary(name, options = {}) {
-  const client = await getClient();
-  const result = await client.createLibrary(name, options);
-
-  // Clear libraries cache so the new library shows up
-  await Storage.remove(['libraries', 'librariesTime']);
-
-  return result;
+async function lookupByArxiv(arxivId) {
+  const inspireClient = getClient();
+  const doc = await inspireClient.lookupByArxiv(arxivId);
+  return { document: doc };
 }
 
 /**
- * Resolve BibTeX entries to ADS bibcodes
+ * Get a single record by recid
+ */
+async function getRecord(recid) {
+  const inspireClient = getClient();
+  const doc = await inspireClient.getRecord(recid);
+  return { document: doc };
+}
+
+/**
+ * Get parsed papers from cache
+ */
+async function getParsedPapers() {
+  const papers = await Storage.getParsedPapers();
+  return { papers: papers || [] };
+}
+
+/**
+ * Parse .bib file content and cache it
+ */
+async function parseBibFile(content, fileName) {
+  // Store the raw content
+  await Storage.setBibFileContent(content, fileName);
+
+  // Parse into display format
+  const papers = BibtexUtils.parseBibtexForDisplay(content);
+
+  // Cache parsed papers
+  await Storage.setParsedPapers(papers);
+
+  return { papers, count: papers.length };
+}
+
+/**
+ * Resolve BibTeX entries to INSPIRE records
  * @param {string} bibtexContent - Raw BibTeX content
  * @returns {Object} Resolution results with found/notFound categorization
  */
 async function resolveBibtex(bibtexContent) {
-  const client = await getClient();
+  const inspireClient = getClient();
 
   // Parse BibTeX content
   const entries = BibtexUtils.parseBibtex(bibtexContent);
@@ -192,67 +185,19 @@ async function resolveBibtex(bibtexContent) {
   }
 
   // Convert parsed entries to format expected by resolver
-  // The parseBibtex adapter returns { type, key, raw } format for compatibility
-  // We need to convert to { citeKey, entryType, fields } format
   const normalizedEntries = entries.map(entry => ({
-    citeKey: entry.key,
-    entryType: entry.type,
-    fields: extractFieldsFromRaw(entry.raw),
+    citeKey: entry.citeKey,
+    entryType: entry.entryType,
+    fields: entry.fields,
   }));
 
-  // Create search function wrapper
-  const searchFn = async (query, rows) => {
-    return await client.search(query, rows);
-  };
-
   // Resolve entries
-  const results = await resolveEntries(normalizedEntries, searchFn, null, 150);
+  const results = await resolveEntries(normalizedEntries, inspireClient, null, 150);
 
   // Categorize results
   const categorized = categorizeResults(results);
 
   return { results, categorized };
-}
-
-/**
- * Extract fields from raw BibTeX string
- * @param {string} rawBibtex - Raw BibTeX entry
- * @returns {Object} Extracted fields
- */
-function extractFieldsFromRaw(rawBibtex) {
-  const fields = {};
-
-  // First try simple fields without nested braces
-  const simpleFieldRegex = /(\w+)\s*=\s*(?:"([^"]*)"|(\d+)(?![.\d]))/g;
-  let match;
-  while ((match = simpleFieldRegex.exec(rawBibtex)) !== null) {
-    const fieldName = match[1].toLowerCase();
-    const value = match[2] ?? match[3] ?? '';
-    fields[fieldName] = value.trim();
-  }
-
-  // Now handle brace-delimited fields with proper brace matching
-  const braceFieldRegex = /(\w+)\s*=\s*\{/g;
-  while ((match = braceFieldRegex.exec(rawBibtex)) !== null) {
-    const fieldName = match[1].toLowerCase();
-    const startPos = match.index + match[0].length;
-
-    // Find matching closing brace
-    let braceCount = 1;
-    let pos = startPos;
-    while (pos < rawBibtex.length && braceCount > 0) {
-      if (rawBibtex[pos] === '{') braceCount++;
-      else if (rawBibtex[pos] === '}') braceCount--;
-      pos++;
-    }
-
-    if (braceCount === 0) {
-      const value = rawBibtex.substring(startPos, pos - 1);
-      fields[fieldName] = value.trim();
-    }
-  }
-
-  return fields;
 }
 
 // Handle keyboard shortcut
@@ -270,9 +215,10 @@ chrome.commands.onCommand.addListener((command) => {
 // Handle extension install/update
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
-    // Open options page on first install
-    chrome.runtime.openOptionsPage();
+    // Open options page on first install (optional for INSPIRE since no token needed)
+    // For now, just log that we're installed
+    console.log('INSPIRE for Overleaf installed');
   }
 });
 
-console.log('ADS for Overleaf service worker initialized');
+console.log('INSPIRE for Overleaf service worker initialized');

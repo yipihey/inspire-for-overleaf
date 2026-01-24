@@ -1,10 +1,10 @@
 {
   "extensionName": {
-    "message": "ADS for Overleaf",
+    "message": "INSPIRE for Overleaf",
     "description": "The name of the extension"
   },
   "extensionDescription": {
-    "message": "Connect NASA ADS libraries to Overleaf. Search, cite, and export BibTeX directly in the Overleaf editor.",
+    "message": "Search INSPIRE HEP and cite papers directly in Overleaf. Load your .bib file and insert citations with ease.",
     "description": "The description of the extension"
   }
 }

@@ -3,76 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ADS for Overleaf - Settings</title>
+  <title>INSPIRE for Overleaf - Settings</title>
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
   <div class="options-container">
     <header class="options-header">
-      <h1>ADS for Overleaf</h1>
+      <h1>INSPIRE for Overleaf</h1>
       <p>Settings</p>
     </header>
 
     <main class="options-content">
-      <!-- API Token Section -->
-      <section class="section">
-        <h2>ADS API Token</h2>
-        <p class="description">
-          Your personal API token from NASA ADS. Get yours at 
-          <a href="https://ui.adsabs.harvard.edu/user/settings/token" target="_blank">ui.adsabs.harvard.edu/user/settings/token</a>
-        </p>
-        
-        <div class="form-group">
-          <label for="api-token">API Token</label>
-          <div class="input-group">
-            <input type="password" id="api-token" placeholder="Paste your ADS API token here">
-            <button type="button" id="toggle-token" class="btn-icon" title="Show/Hide">👁</button>
-          </div>
-          <div id="token-status" class="status"></div>
-        </div>
-        
-        <div class="form-actions">
-          <button id="save-token" class="btn primary">Save Token</button>
-          <button id="test-token" class="btn secondary">Test Connection</button>
-        </div>
-      </section>
-
-      <!-- BibTeX Preferences -->
-      <section class="section">
-        <h2>BibTeX Preferences</h2>
-        
-        <div class="form-group">
-          <label for="key-format">Citation Key Format</label>
-          <select id="key-format">
-            <option value="">Bibcode (default)</option>
-            <option value="%1H%Y">Author2024</option>
-            <option value="%1H:%Y">Author:2024</option>
-            <option value="%1H%Y%q">Author2024ApJ</option>
-            <option value="%2H%Y">AuthorCoauthor2024</option>
-          </select>
-          <p class="hint">How citation keys are formatted in exported BibTeX</p>
-        </div>
-
-        <div class="form-group">
-          <label for="journal-format">Journal Format</label>
-          <select id="journal-format">
-            <option value="1">AASTeX macros (\apj, \mnras)</option>
-            <option value="2">Full journal names</option>
-            <option value="3">Abbreviated names</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="max-authors">Maximum Authors</label>
-          <input type="number" id="max-authors" min="1" max="100" value="10">
-          <p class="hint">Authors beyond this number will show as "et al."</p>
-        </div>
-      </section>
-
       <!-- Citation Preferences -->
       <section class="section">
         <h2>Citation Preferences</h2>
-        
+
         <div class="form-group">
           <label for="cite-command">Citation Command</label>
           <select id="cite-command">
@@ -83,27 +28,38 @@
             <option value="\\citealp">\\citealp{} (natbib alt parens)</option>
           </select>
         </div>
+
+        <div class="form-group">
+          <label for="max-authors">Maximum Authors to Display</label>
+          <input type="number" id="max-authors" min="1" max="20" value="3">
+          <p class="hint">Number of authors to show before "et al."</p>
+        </div>
       </section>
 
       <!-- Cache Management -->
       <section class="section">
-        <h2>Cache</h2>
+        <h2>Data</h2>
         <p class="description">
-          Library data is cached locally to improve performance.
+          Your .bib file is cached locally for quick access.
         </p>
-        <button id="clear-cache" class="btn secondary">Clear Cache</button>
+        <div class="form-actions">
+          <button id="clear-bib" class="btn secondary">Clear .bib Cache</button>
+          <button id="clear-cache" class="btn secondary">Clear All Data</button>
+        </div>
       </section>
 
       <!-- About -->
       <section class="section">
         <h2>About</h2>
         <p class="description">
-          ADS for Overleaf connects your NASA ADS libraries directly to Overleaf, 
-          making it easy to cite papers while writing.
+          INSPIRE for Overleaf lets you search the INSPIRE HEP database and insert
+          citations directly in Overleaf. Load your .bib file to see your papers
+          and quickly insert citations.
         </p>
         <p class="description">
-          <strong>Version:</strong> 1.0.0<br>
-          <strong>Source:</strong> <a href="https://github.com/yipihey/ads-for-overleaf" target="_blank">GitHub</a><br>
+          <strong>Version:</strong> 2.0.0<br>
+          <strong>Source:</strong> <a href="https://github.com/yipihey/inspire-for-overleaf" target="_blank">GitHub</a><br>
+          <strong>INSPIRE HEP:</strong> <a href="https://inspirehep.net" target="_blank">inspirehep.net</a><br>
           <strong>License:</strong> MIT
         </p>
       </section>
