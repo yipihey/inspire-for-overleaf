@@ -11,6 +11,14 @@
 
 Search INSPIRE HEP and cite papers directly in Overleaf. Load your .bib file, search the literature, and insert citations without leaving the editor.
 
+<p align="center">
+  <a href="docs/screenshot.png">
+    <img src="docs/screenshot.png" alt="Screenshot of INSPIRE for Overleaf extension showing the citation panel inside Overleaf with search results for author Ferraro, Simone displaying DESI papers with Copy BibTeX buttons" width="400">
+  </a>
+  <br>
+  <em>Click to enlarge</em>
+</p>
+
 ## Features
 
 - 🔍 **Search INSPIRE HEP** — Find papers across all of INSPIRE without leaving your document
