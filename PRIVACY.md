@@ -1,12 +1,12 @@
 # Privacy Policy
 
-**ADS for Overleaf Browser Extension**
+**INSPIRE for Overleaf Browser Extension**
 
 Last updated: January 2026
 
 ## Overview
 
-ADS for Overleaf is committed to protecting your privacy. This policy explains what data the extension accesses, how it's used, and how it's protected.
+INSPIRE for Overleaf is committed to protecting your privacy. This policy explains what data the extension accesses, how it's used, and how it's protected.
 
 ## Data Collection
 
@@ -20,19 +20,18 @@ The following data is stored locally in your browser using the browser's extensi
 
 | Data | Purpose | Storage Location |
 |------|---------|-----------------|
-| ADS API Token | Authenticate with ADS servers | Local browser storage |
 | User Preferences | Remember your settings | Local browser storage |
-| Library Cache | Improve performance | Local browser storage |
+| Search Cache | Improve performance | Local browser storage |
 
-This data never leaves your device except when making authenticated requests to the ADS API.
+This data never leaves your device.
 
 ## Data Transmission
 
 The extension communicates only with:
 
-- **api.adsabs.harvard.edu** — The official NASA ADS API
+- **inspirehep.net** — The INSPIRE HEP literature database
 
-All communication uses HTTPS encryption. Your API token is sent only to ADS servers for authentication purposes.
+All communication uses HTTPS encryption. No authentication is required as INSPIRE's literature search is open access.
 
 The extension does **not** communicate with:
 
@@ -46,23 +45,22 @@ The extension does **not** communicate with:
 ### What the Extension Can Access
 
 - **Overleaf.com pages** — To inject the citation panel UI
-- **ADS API** — To fetch your libraries and search results
+- **INSPIRE HEP API** — To search for papers and fetch BibTeX
 
 ### What the Extension Cannot Access
 
-- Your Overleaf documents
+- Your Overleaf documents (beyond inserting citations at your cursor)
 - Your browsing history
 - Other websites
 - Your personal files
 
 ## Third-Party Services
 
-### NASA ADS
+### INSPIRE HEP
 
-When you use this extension, you interact with NASA ADS through their API. Your use of ADS is subject to their privacy policy and terms of service:
+When you use this extension, you interact with INSPIRE HEP through their API. Your use of INSPIRE is subject to their terms of service:
 
-- [ADS Privacy Policy](https://ui.adsabs.harvard.edu/help/privacy/)
-- [ADS Terms of Use](https://ui.adsabs.harvard.edu/help/terms/)
+- [INSPIRE HEP](https://inspirehep.net/)
 
 ### Overleaf
 
@@ -72,7 +70,6 @@ The extension injects UI elements into Overleaf pages. Your use of Overleaf is s
 
 ## Data Retention
 
-- **API Token**: Stored until you remove it or uninstall the extension
 - **Preferences**: Stored until you reset them or uninstall the extension
 - **Cache**: Automatically expires after 5 minutes; cleared on "Clear Cache" action
 
@@ -82,13 +79,12 @@ You can:
 
 - **View your data**: Check extension storage in browser developer tools
 - **Delete your data**: Use "Clear Cache" in settings or uninstall the extension
-- **Revoke API access**: Delete your token in extension settings and/or regenerate it on ADS
 
 ## Security
 
-- API tokens are stored in local browser storage (not synced to cloud)
 - All API communication uses HTTPS
 - The extension has minimal permissions (only what's needed to function)
+- No API tokens or credentials are stored
 
 ## Children's Privacy
 
@@ -102,10 +98,9 @@ We may update this policy occasionally. Significant changes will be noted in the
 
 For privacy concerns or questions:
 
-- Open an issue on [GitHub](https://github.com/yipihey/ads-for-overleaf/issues)
-- Email: ads-for-overleaf@tomabel.org
+- Open an issue on [GitHub](https://github.com/yipihey/inspire-for-overleaf/issues)
 
 ## Open Source
 
 This extension is open source. You can review the complete source code at:
-https://github.com/yipihey/ads-for-overleaf
+https://github.com/yipihey/inspire-for-overleaf

@@ -1,24 +1,24 @@
-# ADS for Overleaf
+# INSPIRE for Overleaf
 
 <p align="center">
-  <img src="icons/icon.svg" alt="ADS for Overleaf Logo" width="128" height="128">
+  <img src="icons/icon.svg" alt="INSPIRE for Overleaf Logo" width="128" height="128">
 </p>
 
-[![Download Latest Release](https://img.shields.io/github/v/release/yipihey/ads-for-overleaf?label=Download&style=for-the-badge)](https://github.com/yipihey/ads-for-overleaf/releases/latest)
+[![Download Latest Release](https://img.shields.io/github/v/release/yipihey/inspire-for-overleaf?label=Download&style=for-the-badge)](https://github.com/yipihey/inspire-for-overleaf/releases/latest)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![GitHub Release](https://img.shields.io/github/v/release/yipihey/ads-for-overleaf)](https://github.com/yipihey/ads-for-overleaf/releases/latest)
+[![GitHub Release](https://img.shields.io/github/v/release/yipihey/inspire-for-overleaf)](https://github.com/yipihey/inspire-for-overleaf/releases/latest)
 
-Connect your NASA ADS libraries directly to Overleaf. Search, cite, and export BibTeX without leaving the editor.
+Search INSPIRE HEP and cite papers directly in Overleaf. Load your .bib file, search the literature, and insert citations without leaving the editor.
 
-![ADS for Overleaf Screenshot](docs/screenshot.jpg)
+![INSPIRE for Overleaf Screenshot](docs/screenshot.jpg)
 
 ## Features
 
-- 📚 **Browse ADS Libraries** — Access all your personal ADS libraries from within Overleaf
-- 🔍 **Search ADS** — Find papers across all of ADS without leaving your document
+- 🔍 **Search INSPIRE HEP** — Find papers across all of INSPIRE without leaving your document
+- 📚 **Load Your Bibliography** — Import your existing .bib file to see what's already cited
 - 📝 **One-Click Citations** — Insert `\cite{}` commands at your cursor with a single click
-- 📋 **Export BibTeX** — Copy or download BibTeX for any paper or entire library
+- 📋 **Export BibTeX** — Copy BibTeX for any paper directly to your clipboard
 - ⌨️ **Keyboard Shortcut** — Quick access with `Ctrl+Shift+C` (or `Cmd+Shift+C` on Mac)
 - 🎨 **Dark Mode Support** — Automatically adapts to your system preferences
 
@@ -26,7 +26,7 @@ Connect your NASA ADS libraries directly to Overleaf. Search, cite, and export B
 
 ### Chrome / Edge / Brave
 
-1. Download the latest release from [Releases](https://github.com/yipihey/ads-for-overleaf/releases)
+1. Download the latest release from [Releases](https://github.com/yipihey/inspire-for-overleaf/releases)
 2. Unzip the file
 3. Go to `chrome://extensions/`
 4. Enable "Developer mode" (top right)
@@ -36,7 +36,7 @@ Connect your NASA ADS libraries directly to Overleaf. Search, cite, and export B
 
 ### Firefox
 
-1. Download the latest release from [Releases](https://github.com/yipihey/ads-for-overleaf/releases)
+1. Download the latest release from [Releases](https://github.com/yipihey/inspire-for-overleaf/releases)
 2. Go to `about:debugging#/runtime/this-firefox`
 3. Click "Load Temporary Add-on"
 4. Select any file in the unzipped folder
@@ -45,56 +45,56 @@ Connect your NASA ADS libraries directly to Overleaf. Search, cite, and export B
 
 ## Setup
 
-1. **Get your ADS API token**
-   - Go to [ADS Token Settings](https://ui.adsabs.harvard.edu/user/settings/token)
-   - Log in with your ADS account
-   - Copy your API token
+1. **Open any project on [Overleaf](https://www.overleaf.com)**
 
-2. **Configure the extension**
-   - Click the ADS for Overleaf icon in your browser toolbar
-   - Click "Set up now" or go to Settings
-   - Paste your API token and click "Save Token"
+2. **Open the INSPIRE panel**
+   - Click the "INSPIRE" button in the toolbar, or
+   - Use the keyboard shortcut `Ctrl+Shift+C` (or `Cmd+Shift+C` on Mac)
 
-3. **Start using it!**
-   - Open any project on [Overleaf](https://www.overleaf.com)
-   - Click the "ADS" button in the toolbar (or press `Ctrl+Shift+C`)
-   - Browse your libraries or search for papers
-   - Click any paper to insert a citation
+3. **Start searching and citing!**
+   - Search for papers by title, author, arXiv ID, or DOI
+   - Click any paper to insert a citation at your cursor
+   - Use the BibTeX button to copy the entry for your .bib file
+
+No API token required — INSPIRE HEP's literature search is open access!
 
 ## Usage
 
 ### Inserting Citations
 
 1. Place your cursor where you want the citation
-2. Open the ADS panel (`Ctrl+Shift+C`)
-3. Search or browse to find your paper
-4. Click the paper to insert `\cite{bibcode}`
+2. Open the INSPIRE panel (`Ctrl+Shift+C`)
+3. Search for your paper by title, author, arXiv ID, or DOI
+4. Click the paper to insert `\cite{key}`
 
 ### Exporting BibTeX
 
-1. Find the paper in the ADS panel
+1. Find the paper in the INSPIRE panel
 2. Click the "BibTeX" button
 3. The BibTeX entry is copied to your clipboard
 4. Paste into your `.bib` file
+
+### Loading Your Bibliography
+
+The extension can detect citations already in your document, helping you avoid duplicate entries and quickly find papers you've already cited.
 
 ### Customization
 
 In Settings, you can configure:
 
-- **Citation key format** — Choose between bibcode, Author2024, Author:2024, etc.
-- **Journal format** — AASTeX macros, full names, or abbreviations
+- **Citation key format** — Choose between INSPIRE keys, Author2024, Author:2024, etc.
+- **Journal format** — Full names or abbreviations
 - **Citation command** — `\cite`, `\citep`, `\citet`, etc.
 
 ## Privacy
 
 This extension:
 
-- ✅ Stores your ADS API token locally in your browser
-- ✅ Only communicates with `api.adsabs.harvard.edu`
+- ✅ Only communicates with `inspirehep.net` and `overleaf.com`
+- ✅ Stores preferences locally in your browser
 - ❌ Does not collect any personal data
 - ❌ Does not use analytics or tracking
-
-Your API token never leaves your device except to authenticate with the official ADS servers.
+- ❌ Does not require an API token
 
 See [PRIVACY.md](PRIVACY.md) for the full privacy policy.
 
@@ -102,27 +102,26 @@ See [PRIVACY.md](PRIVACY.md) for the full privacy policy.
 
 ### Prerequisites
 
-- Node.js 18+ (optional, for build tools)
 - A browser with developer mode enabled
 
 ### Running Locally
 
 ```bash
 # Clone the repository
-git clone https://github.com/yipihey/ads-for-overleaf.git
-cd ads-for-overleaf
+git clone https://github.com/yipihey/inspire-for-overleaf.git
+cd inspire-for-overleaf
 
 # Load in Chrome
 # 1. Go to chrome://extensions/
 # 2. Enable Developer mode
 # 3. Click "Load unpacked"
-# 4. Select the ads-for-overleaf folder
+# 4. Select the inspire-for-overleaf folder
 ```
 
 ### Project Structure
 
 ```
-ads-for-overleaf/
+inspire-for-overleaf/
 ├── manifest.json          # Extension manifest
 ├── background/            # Service worker
 ├── content/               # Content scripts (injected into Overleaf)
@@ -147,16 +146,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
 
 ## Related Projects
 
-- [imbib](https://github.com/yipihey/imbib) — Cross-platform scientific publication manager
-- [adstex](https://github.com/yymao/adstex) — Command-line BibTeX generator from ADS
-- [NASA ADS](https://ui.adsabs.harvard.edu/) — The Astrophysics Data System
+- [ADS for Overleaf](https://github.com/yipihey/ads-for-overleaf) — Similar extension for NASA ADS
+- [INSPIRE HEP](https://inspirehep.net/) — High-Energy Physics literature database
+- [Overleaf](https://www.overleaf.com) — Collaborative LaTeX editor
 
 ## Acknowledgments
 
-This extension uses the NASA ADS logo under the [Creative Commons Attribution 4.0 License](http://creativecommons.org/licenses/by/4.0/).
+This extension is a fork of [ADS for Overleaf](https://github.com/yipihey/ads-for-overleaf), adapted to work with INSPIRE HEP.
 
-This extension is not affiliated with NASA or the Smithsonian Astrophysical Observatory. 
-NASA ADS is a service of the Smithsonian Astrophysical Observatory under NASA Cooperative Agreement 80NSSC21M0056.
+This extension is not affiliated with CERN or the INSPIRE collaboration. INSPIRE HEP is a trusted community hub that helps researchers find accurate scholarly information in high energy physics.
 
 ## License
 
@@ -164,4 +162,4 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
-**Made with ❤️ for the astronomy community**
+**Made with love for the particle physics community**
