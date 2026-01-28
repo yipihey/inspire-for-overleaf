@@ -1089,8 +1089,8 @@
   }
 
   /**
-   * Copy \cite command to clipboard
-   * For search results, optionally add to local bib if not already present
+   * Insert \cite command at cursor
+   * For search results, optionally add BibTeX to local bib if not already present
    */
   async function copyCiteCommand(citeKey, isSearchResult = false, recid = null) {
     const citeCmd = state.preferences?.citeCommand || '\\cite';
@@ -1135,21 +1135,34 @@
               // Update paper count display
               updateBibStatus();
 
-              // Also copy BibTeX to clipboard so user can paste it
+              // Copy BibTeX to clipboard so user can paste it into .bib file
               await copyToClipboard(result.bibtex);
-              setStatus(`BibTeX added & copied. Paste into your .bib file. ${citation}`);
+
+              // Insert citation at cursor
+              const success = await insertTextAtCursor(citation);
+              if (success) {
+                setStatus(`Inserted ${citation}. BibTeX copied - paste into .bib file`);
+              } else {
+                setStatus(`BibTeX copied. Manually add: ${citation}`);
+              }
               return;
             }
           }
         } catch (error) {
           console.error('Failed to add to bib:', error);
-          // Fall through to just copy cite command
+          // Fall through to just insert cite command
         }
       }
     }
 
-    await copyToClipboard(citation);
-    setStatus(`Copied: ${citation}`);
+    // Insert citation at cursor (or copy to clipboard as fallback)
+    const success = await insertTextAtCursor(citation);
+    if (success) {
+      setStatus(`Inserted: ${citation}`);
+    } else {
+      await copyToClipboard(citation);
+      setStatus(`Copied: ${citation}`);
+    }
   }
 
   /**
