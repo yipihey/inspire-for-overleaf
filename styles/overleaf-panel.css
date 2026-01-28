@@ -329,7 +329,9 @@
   gap: 8px;
 }
 
+.ads-doc-cite,
 .ads-doc-bibtex,
+.ads-doc-bibtex-local,
 .ads-doc-link {
   padding: 4px 10px;
   font-size: 11px;
@@ -340,13 +342,25 @@
   transition: background 0.15s;
 }
 
-.ads-doc-bibtex {
+.ads-doc-cite {
+  background: #fef7e0;
+  color: #b06000;
+  border: none;
+}
+
+.ads-doc-cite:hover {
+  background: #feefc3;
+}
+
+.ads-doc-bibtex,
+.ads-doc-bibtex-local {
   background: #e8f0fe;
   color: #1a73e8;
   border: none;
 }
 
-.ads-doc-bibtex:hover {
+.ads-doc-bibtex:hover,
+.ads-doc-bibtex-local:hover {
   background: #d2e3fc;
 }
 
@@ -792,11 +806,17 @@
     color: #8ab4f8;
   }
   
-  .ads-doc-bibtex {
+  .ads-doc-cite {
+    background: #3c3526;
+    color: #fdd663;
+  }
+
+  .ads-doc-bibtex,
+  .ads-doc-bibtex-local {
     background: #3c4043;
     color: #8ab4f8;
   }
-  
+
   .ads-doc-link {
     background: #3c4043;
     color: #9aa0a6;

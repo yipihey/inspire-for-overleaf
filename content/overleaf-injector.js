@@ -733,7 +733,7 @@
   /**
    * Render a single paper item
    * @param {Object} paper - Paper data
-   * @param {boolean} isSearchResult - True if from INSPIRE search (show Copy BibTeX)
+   * @param {boolean} isSearchResult - True if from INSPIRE search
    */
   function renderPaperItem(paper, isSearchResult) {
     const authors = formatAuthors(paper.author);
@@ -744,17 +744,23 @@
     const escapedKey = escapeHtml(citeKey);
     const escapedRecid = escapeHtml(recid);
 
-    // For search results, show Copy BibTeX button
-    // For local papers, they already have BibTeX
-    const actionButtons = isSearchResult
-      ? `
-        <button class="ads-doc-bibtex" data-recid="${escapedRecid}"
-                title="Copy BibTeX" aria-label="Copy BibTeX for ${escapeHtml(authors)} ${year}">Copy BibTeX</button>
-        `
-      : '';
+    // \cite button for both local papers and search results
+    const citeButton = `
+      <button class="ads-doc-cite" data-citekey="${escapedKey}"
+              title="Copy \\cite command" aria-label="Copy cite command for ${escapeHtml(authors)} ${year}">\\cite</button>
+    `;
 
-    // Link to INSPIRE
-    const inspireLink = recid
+    // Copy BibTeX button
+    // For search results: fetch from INSPIRE
+    // For local papers: copy from stored raw bibtex
+    const bibtexButton = isSearchResult
+      ? `<button class="ads-doc-bibtex" data-recid="${escapedRecid}"
+              title="Copy BibTeX" aria-label="Copy BibTeX for ${escapeHtml(authors)} ${year}">Copy BibTeX</button>`
+      : `<button class="ads-doc-bibtex-local" data-citekey="${escapedKey}"
+              title="Copy BibTeX" aria-label="Copy BibTeX for ${escapeHtml(authors)} ${year}">Copy BibTeX</button>`;
+
+    // Link to INSPIRE (only for search results with recid)
+    const inspireLink = isSearchResult && recid
       ? `<a href="https://inspirehep.net/literature/${escapedRecid}" target="_blank" rel="noopener noreferrer"
            class="ads-doc-link" title="Open in INSPIRE" aria-label="Open in INSPIRE">INSPIRE</a>`
       : '';
@@ -769,7 +775,8 @@
           <span class="ads-doc-year">${year}</span>
         </div>
         <div class="ads-doc-actions">
-          ${actionButtons}
+          ${citeButton}
+          ${bibtexButton}
           ${inspireLink}
         </div>
       </div>
@@ -804,11 +811,27 @@
       });
     });
 
-    // Copy BibTeX buttons (for search results)
+    // \cite buttons - copy cite command to clipboard
+    container.querySelectorAll('.ads-doc-cite').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await copyCiteCommand(btn.dataset.citekey);
+      });
+    });
+
+    // Copy BibTeX buttons (for search results - fetch from INSPIRE)
     container.querySelectorAll('.ads-doc-bibtex').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         await copyBibtex(btn.dataset.recid);
+      });
+    });
+
+    // Copy BibTeX buttons (for local papers - use stored raw bibtex)
+    container.querySelectorAll('.ads-doc-bibtex-local').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await copyLocalBibtex(btn.dataset.citekey);
       });
     });
   }
@@ -1047,7 +1070,17 @@
   }
 
   /**
-   * Copy BibTeX to clipboard (for search results)
+   * Copy \cite command to clipboard
+   */
+  async function copyCiteCommand(citeKey) {
+    const citeCmd = state.preferences?.citeCommand || '\\cite';
+    const citation = `${citeCmd}{${citeKey}}`;
+    await copyToClipboard(citation);
+    setStatus(`Copied: ${citation}`);
+  }
+
+  /**
+   * Copy BibTeX to clipboard (for search results - fetch from INSPIRE)
    */
   async function copyBibtex(recid) {
     try {
@@ -1062,6 +1095,19 @@
       setStatus('BibTeX copied to clipboard');
     } catch (error) {
       setError(error.message);
+    }
+  }
+
+  /**
+   * Copy BibTeX to clipboard (for local papers - use stored raw bibtex)
+   */
+  async function copyLocalBibtex(citeKey) {
+    const paper = state.papers.find(p => p.citeKey === citeKey || p.bibcode === citeKey);
+    if (paper && paper.raw) {
+      await copyToClipboard(paper.raw);
+      setStatus('BibTeX copied to clipboard');
+    } else {
+      setError('BibTeX not found for this entry');
     }
   }
 
