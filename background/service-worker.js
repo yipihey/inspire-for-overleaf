@@ -75,6 +75,10 @@ async function handleMessage(message, sender) {
       await Storage.clearBibFile();
       return { success: true };
 
+    // Add a single paper to the cached papers
+    case 'addPaperToCache':
+      return await addPaperToCache(payload.paper);
+
     // User preferences
     case 'getPreferences':
       return await Storage.getPreferences();
@@ -143,6 +147,25 @@ async function getRecord(recid) {
 async function getParsedPapers() {
   const papers = await Storage.getParsedPapers();
   return { papers: papers || [] };
+}
+
+/**
+ * Add a single paper to the cached papers
+ */
+async function addPaperToCache(paper) {
+  const papers = await Storage.getParsedPapers() || [];
+
+  // Check if already exists
+  const exists = papers.some(p =>
+    p.citeKey === paper.citeKey || p.bibcode === paper.citeKey
+  );
+
+  if (!exists) {
+    papers.push(paper);
+    await Storage.setParsedPapers(papers);
+  }
+
+  return { success: true, count: papers.length };
 }
 
 /**

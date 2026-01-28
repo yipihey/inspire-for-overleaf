@@ -442,6 +442,32 @@
   animation: badge-pulse 2s ease-in-out infinite;
 }
 
+/* Auto-add to bib option */
+.ads-auto-add-option {
+  padding: 8px 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 12px;
+}
+
+.ads-auto-add-option label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: #5f6368;
+}
+
+.ads-auto-add-option input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.ads-auto-add-option label:hover {
+  color: #202124;
+}
+
 @keyframes badge-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
@@ -830,5 +856,18 @@
   .ads-status.error {
     background: #5c2b29;
     color: #f28b82;
+  }
+
+  .ads-auto-add-option {
+    background: #35363a;
+    border-color: #5f6368;
+  }
+
+  .ads-auto-add-option label {
+    color: #9aa0a6;
+  }
+
+  .ads-auto-add-option label:hover {
+    color: #e8eaed;
   }
 }

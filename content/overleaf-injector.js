@@ -28,6 +28,7 @@
     sidebarVisible: false,
     bibFileName: null,    // Name of loaded .bib file
     filterQuery: '',      // Current filter query for papers view
+    autoAddToBib: false,  // Auto-add new citations to local .bib
   };
 
   // DOM Elements
@@ -214,6 +215,13 @@
         <span id="inspire-paper-count" class="ads-badge"></span>
       </div>
 
+      <div id="inspire-auto-add" class="ads-auto-add-option">
+        <label>
+          <input type="checkbox" id="inspire-auto-add-checkbox" />
+          <span>Auto-add new to local .bib</span>
+        </label>
+      </div>
+
       <div class="ads-search-container" role="search">
         <label for="inspire-search-input" class="visually-hidden">Search</label>
         <input type="text" id="inspire-search-input" placeholder="Filter papers..."
@@ -267,6 +275,11 @@
       document.getElementById('inspire-file-input').click();
     });
     sidebar.querySelector('#inspire-refresh-bib-btn').addEventListener('click', refreshFromEditor);
+
+    // Auto-add to bib checkbox
+    sidebar.querySelector('#inspire-auto-add-checkbox').addEventListener('change', (e) => {
+      state.autoAddToBib = e.target.checked;
+    });
 
     // Tab switching with keyboard support
     sidebar.querySelectorAll('.ads-tab').forEach(tab => {
@@ -745,10 +758,12 @@
     const escapedRecid = escapeHtml(recid);
 
     // \cite button for both local papers and search results
-    const citeButton = `
-      <button class="ads-doc-cite" data-citekey="${escapedKey}"
-              title="Copy \\cite command" aria-label="Copy cite command for ${escapeHtml(authors)} ${year}">\\cite</button>
-    `;
+    // For search results, include recid so we can fetch BibTeX if needed
+    const citeButton = isSearchResult
+      ? `<button class="ads-doc-cite" data-citekey="${escapedKey}" data-recid="${escapedRecid}" data-search="true"
+              title="Copy \\cite command" aria-label="Copy cite command for ${escapeHtml(authors)} ${year}">\\cite</button>`
+      : `<button class="ads-doc-cite" data-citekey="${escapedKey}"
+              title="Copy \\cite command" aria-label="Copy cite command for ${escapeHtml(authors)} ${year}">\\cite</button>`;
 
     // Copy BibTeX button
     // For search results: fetch from INSPIRE
@@ -812,10 +827,14 @@
     });
 
     // \cite buttons - copy cite command to clipboard
+    // For search results, optionally add to local bib first
     container.querySelectorAll('.ads-doc-cite').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        await copyCiteCommand(btn.dataset.citekey);
+        const isSearchResult = btn.dataset.search === 'true';
+        const citeKey = btn.dataset.citekey;
+        const recid = btn.dataset.recid;
+        await copyCiteCommand(citeKey, isSearchResult, recid);
       });
     });
 
@@ -1071,10 +1090,64 @@
 
   /**
    * Copy \cite command to clipboard
+   * For search results, optionally add to local bib if not already present
    */
-  async function copyCiteCommand(citeKey) {
+  async function copyCiteCommand(citeKey, isSearchResult = false, recid = null) {
     const citeCmd = state.preferences?.citeCommand || '\\cite';
     const citation = `${citeCmd}{${citeKey}}`;
+
+    // Check if this is a search result and auto-add is enabled
+    if (isSearchResult && state.autoAddToBib && recid) {
+      // Check if already in local bib
+      const existsInBib = state.papers.some(p =>
+        p.citeKey === citeKey || p.bibcode === citeKey
+      );
+
+      if (!existsInBib) {
+        try {
+          setStatus('Fetching BibTeX...');
+
+          // Fetch BibTeX from INSPIRE
+          const result = await sendMessage({
+            action: 'exportBibtex',
+            payload: { recids: [recid] }
+          });
+
+          if (result.bibtex) {
+            // Add to local papers cache
+            const searchResult = state.searchResults.find(r =>
+              r.recid === recid || r.bibcode === recid
+            );
+
+            if (searchResult) {
+              const newPaper = {
+                ...searchResult,
+                raw: result.bibtex
+              };
+              state.papers.push(newPaper);
+
+              // Update the cached papers in storage
+              await sendMessage({
+                action: 'addPaperToCache',
+                payload: { paper: newPaper }
+              });
+
+              // Update paper count display
+              updateBibStatus();
+
+              // Also copy BibTeX to clipboard so user can paste it
+              await copyToClipboard(result.bibtex);
+              setStatus(`BibTeX added & copied. Paste into your .bib file. ${citation}`);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Failed to add to bib:', error);
+          // Fall through to just copy cite command
+        }
+      }
+    }
+
     await copyToClipboard(citation);
     setStatus(`Copied: ${citation}`);
   }
