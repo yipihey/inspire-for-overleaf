@@ -9,7 +9,7 @@
 set -e
 
 VERSION=${1:-$(grep '"version"' manifest.json | sed 's/.*"version": "\([^"]*\)".*/\1/')}
-RELEASE_NAME="ads-for-overleaf-v${VERSION}"
+RELEASE_NAME="inspire-for-overleaf-v${VERSION}"
 RELEASE_DIR="releases/${RELEASE_NAME}"
 SHARED_LIB_DIR="../shared-ads-lib"
 

@@ -32,5 +32,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All communication over HTTPS
 - No analytics or tracking
 
-[Unreleased]: https://github.com/yipihey/ads-for-overleaf/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/yipihey/ads-for-overleaf/releases/tag/v1.0.0
+[Unreleased]: https://github.com/yipihey/inspire-for-overleaf/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/yipihey/inspire-for-overleaf/releases/tag/v1.0.0

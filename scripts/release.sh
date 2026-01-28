@@ -21,7 +21,7 @@ echo "Building release for ADS for Overleaf v$VERSION"
 
 # Create build directory
 BUILD_DIR="$PROJECT_ROOT/build"
-RELEASE_NAME="ads-for-overleaf-v$VERSION"
+RELEASE_NAME="inspire-for-overleaf-v$VERSION"
 RELEASE_DIR="$BUILD_DIR/$RELEASE_NAME"
 ZIP_FILE="$BUILD_DIR/$RELEASE_NAME.zip"
 

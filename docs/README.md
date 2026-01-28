@@ -94,4 +94,4 @@ A: This extension is designed for Overleaf. It may work on self-hosted Overleaf/
 
 **Q: How do I report a bug?**
 
-A: Open an issue on [GitHub](https://github.com/yipihey/ads-for-overleaf/issues) with details about the problem.
+A: Open an issue on [GitHub](https://github.com/yipihey/inspire-for-overleaf/issues) with details about the problem.

@@ -28,14 +28,14 @@ Initial public release of ADS for Overleaf - a browser extension that integrates
 ## Installation
 
 ### Chrome / Edge / Brave
-1. Download `ads-for-overleaf-v1.0.0.zip` below
+1. Download `inspire-for-overleaf-v1.0.0.zip` below
 2. Unzip the file
 3. Go to `chrome://extensions/` (or `edge://extensions/` or `brave://extensions/`)
 4. Enable "Developer mode"
 5. Click "Load unpacked" and select the unzipped folder
 
 ### Firefox
-1. Download `ads-for-overleaf-v1.0.0.zip` below
+1. Download `inspire-for-overleaf-v1.0.0.zip` below
 2. Unzip the file
 3. Go to `about:debugging#/runtime/this-firefox`
 4. Click "Load Temporary Add-on"
@@ -48,7 +48,7 @@ Initial public release of ADS for Overleaf - a browser extension that integrates
 3. Enter your token in Settings
 4. Open any Overleaf project and click the ADS button!
 
-See the [full installation guide](https://github.com/yipihey/ads-for-overleaf/blob/main/docs/INSTALLATION.md) for detailed instructions.
+See the [full installation guide](https://github.com/yipihey/inspire-for-overleaf/blob/main/docs/INSTALLATION.md) for detailed instructions.
 
 ## Privacy
 

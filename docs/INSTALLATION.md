@@ -4,7 +4,7 @@ This guide provides detailed instructions for installing ADS for Overleaf on all
 
 ## Quick Start
 
-1. Download the latest release zip from [GitHub Releases](https://github.com/yipihey/ads-for-overleaf/releases)
+1. Download the latest release zip from [GitHub Releases](https://github.com/yipihey/inspire-for-overleaf/releases)
 2. Unzip the file
 3. Load the extension in your browser (see browser-specific instructions below)
 4. Get your [ADS API token](https://ui.adsabs.harvard.edu/user/settings/token) and configure it in the extension settings
@@ -182,7 +182,7 @@ When a new version is released:
 
 ## Getting Help
 
-- **Bug reports**: [GitHub Issues](https://github.com/yipihey/ads-for-overleaf/issues)
+- **Bug reports**: [GitHub Issues](https://github.com/yipihey/inspire-for-overleaf/issues)
 - **Questions**: Open a GitHub issue or discussion
 - **Feature requests**: Open a GitHub issue with the "enhancement" label
 
@@ -194,8 +194,8 @@ For developers who want to modify the extension:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yipihey/ads-for-overleaf.git
-cd ads-for-overleaf
+git clone https://github.com/yipihey/inspire-for-overleaf.git
+cd inspire-for-overleaf
 
 # (Optional) Set up shared library for development
 cd lib

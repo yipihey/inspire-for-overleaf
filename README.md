@@ -152,13 +152,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
 
 ## Related Projects
 
-- [ADS for Overleaf](https://github.com/yipihey/ads-for-overleaf) — Similar extension for NASA ADS
+- [ADS for Overleaf](https://github.com/yipihey/inspire-for-overleaf) — Similar extension for NASA ADS
 - [INSPIRE HEP](https://inspirehep.net/) — High-Energy Physics literature database
 - [Overleaf](https://www.overleaf.com) — Collaborative LaTeX editor
 
 ## Acknowledgments
 
-This extension is a fork of [ADS for Overleaf](https://github.com/yipihey/ads-for-overleaf), adapted to work with INSPIRE HEP.
+This extension is a fork of [ADS for Overleaf](https://github.com/yipihey/inspire-for-overleaf), adapted to work with INSPIRE HEP.
 
 This extension is not affiliated with CERN or the INSPIRE collaboration. INSPIRE HEP is a trusted community hub that helps researchers find accurate scholarly information in high energy physics.
 

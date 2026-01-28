@@ -18,8 +18,8 @@ Thank you for your interest in contributing! This document provides guidelines f
 
 2. **Clone your fork**
    ```bash
-   git clone https://github.com/YOUR-USERNAME/ads-for-overleaf.git
-   cd ads-for-overleaf
+   git clone https://github.com/YOUR-USERNAME/inspire-for-overleaf.git
+   cd inspire-for-overleaf
    ```
 
 3. **Load the extension in your browser**
@@ -28,7 +28,7 @@ Thank you for your interest in contributing! This document provides guidelines f
    - Go to `chrome://extensions/`
    - Enable "Developer mode"
    - Click "Load unpacked"
-   - Select the `ads-for-overleaf` folder
+   - Select the `inspire-for-overleaf` folder
 
    **Firefox:**
    - Go to `about:debugging#/runtime/this-firefox`
@@ -45,7 +45,7 @@ Thank you for your interest in contributing! This document provides guidelines f
 
 ### Reporting Bugs
 
-1. Check if the bug has already been reported in [Issues](https://github.com/yipihey/ads-for-overleaf/issues)
+1. Check if the bug has already been reported in [Issues](https://github.com/yipihey/inspire-for-overleaf/issues)
 2. If not, create a new issue with:
    - Clear, descriptive title
    - Steps to reproduce
@@ -55,7 +55,7 @@ Thank you for your interest in contributing! This document provides guidelines f
 
 ### Suggesting Features
 
-1. Check if the feature has been suggested in [Issues](https://github.com/yipihey/ads-for-overleaf/issues)
+1. Check if the feature has been suggested in [Issues](https://github.com/yipihey/inspire-for-overleaf/issues)
 2. If not, create a new issue with:
    - Clear description of the feature
    - Use case / why it would be useful
@@ -123,7 +123,7 @@ async function getLibraries(forceRefresh = false) {
 ## Project Structure
 
 ```
-ads-for-overleaf/
+inspire-for-overleaf/
 ├── manifest.json          # Extension configuration
 ├── background/
 │   └── service-worker.js  # Background script
@@ -178,7 +178,7 @@ Before submitting a PR, please test:
 
 ## Questions?
 
-- Open a [Discussion](https://github.com/yipihey/ads-for-overleaf/discussions) for general questions
+- Open a [Discussion](https://github.com/yipihey/inspire-for-overleaf/discussions) for general questions
 - Tag maintainers in issues if you need help
 
 ## License

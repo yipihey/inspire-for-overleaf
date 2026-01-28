@@ -1,5 +1,5 @@
 {
-  "name": "ads-for-overleaf",
+  "name": "inspire-for-overleaf",
   "version": "1.0.0",
   "description": "Browser extension connecting NASA ADS to Overleaf for academic paper writing",
   "type": "module",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/yipihey/ads-for-overleaf"
+    "url": "https://github.com/yipihey/inspire-for-overleaf"
   },
   "keywords": [
     "browser-extension",
@@ -25,7 +25,7 @@
   "author": "ADS for Overleaf Contributors",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yipihey/ads-for-overleaf/issues"
+    "url": "https://github.com/yipihey/inspire-for-overleaf/issues"
   },
   "engines": {
     "node": ">=18.0.0"
