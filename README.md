@@ -1,7 +1,7 @@
 # INSPIRE for Overleaf
 
 <p align="center">
-  <img src="icons/icon.svg" alt="INSPIRE for Overleaf Logo" width="128" height="128">
+  <img src="icons/inspire-logo.png" alt="INSPIRE for Overleaf Logo" width="300">
 </p>
 
 [![Download Latest Release](https://img.shields.io/github/v/release/yipihey/inspire-for-overleaf?label=Download&style=for-the-badge)](https://github.com/yipihey/inspire-for-overleaf/releases/latest)
@@ -10,8 +10,6 @@
 [![GitHub Release](https://img.shields.io/github/v/release/yipihey/inspire-for-overleaf)](https://github.com/yipihey/inspire-for-overleaf/releases/latest)
 
 Search INSPIRE HEP and cite papers directly in Overleaf. Load your .bib file, search the literature, and insert citations without leaving the editor.
-
-![INSPIRE for Overleaf Screenshot](docs/screenshot.jpg)
 
 ## Features
 
